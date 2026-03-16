@@ -274,11 +274,15 @@ const _ViewConfiguration =
 						onchange="{~P~}.views['ContentEditor-SettingsPanel'].onEditingControlsChanged(this.checked)">
 				</div>
 				<div class="content-editor-settings-row">
-					<label class="content-editor-settings-checkbox-label"
-						for="ContentEditor-Setting-AutoPreview">Auto Content Preview</label>
-					<input type="checkbox" class="content-editor-settings-checkbox"
-						id="ContentEditor-Setting-AutoPreview"
-						onchange="{~P~}.views['ContentEditor-SettingsPanel'].onAutoPreviewChanged(this.checked)">
+					<span class="content-editor-settings-select-label">Content Preview</span>
+					<select class="content-editor-settings-select"
+						id="ContentEditor-Setting-ContentPreviewMode"
+						onchange="{~P~}.views['ContentEditor-SettingsPanel'].onContentPreviewModeChanged(this.value)">
+						<option value="off">Off</option>
+						<option value="bottom">Underneath</option>
+						<option value="side">Beside</option>
+						<option value="tabbed">Tab</option>
+					</select>
 				</div>
 				<div class="content-editor-settings-row">
 					<label class="content-editor-settings-checkbox-label"
@@ -387,10 +391,10 @@ class ContentEditorSettingsPanelView extends libPictView
 			tmpControlsCheckbox[0].checked = tmpSettings.MarkdownEditingControls;
 		}
 
-		let tmpPreviewCheckbox = this.pict.ContentAssignment.getElement('#ContentEditor-Setting-AutoPreview');
-		if (tmpPreviewCheckbox && tmpPreviewCheckbox[0])
+		let tmpPreviewSelect = this.pict.ContentAssignment.getElement('#ContentEditor-Setting-ContentPreviewMode');
+		if (tmpPreviewSelect && tmpPreviewSelect[0])
 		{
-			tmpPreviewCheckbox[0].checked = tmpSettings.AutoContentPreview;
+			tmpPreviewSelect[0].value = tmpSettings.ContentPreviewMode || 'off';
 		}
 
 		let tmpSegmentCheckbox = this.pict.ContentAssignment.getElement('#ContentEditor-Setting-AutoSegment');
@@ -535,32 +539,15 @@ class ContentEditorSettingsPanelView extends libPictView
 		}
 	}
 
-	onAutoPreviewChanged(pChecked)
+	onContentPreviewModeChanged(pMode)
 	{
-		this.pict.AppData.ContentEditor.AutoContentPreview = pChecked;
+		this.pict.AppData.ContentEditor.ContentPreviewMode = pMode;
 		this.pict.PictApplication.saveSettings();
 
 		let tmpEditorView = this.pict.views['ContentEditor-MarkdownEditor'];
 		if (tmpEditorView && this.pict.AppData.ContentEditor.ActiveEditor === 'markdown')
 		{
-			if (pChecked)
-			{
-				// Turning ON: clear global hidden class and show all previews
-				tmpEditorView.togglePreview(true);
-				for (let tmpIdx in tmpEditorView._segmentEditors)
-				{
-					tmpEditorView.toggleSegmentPreview(parseInt(tmpIdx, 10), true);
-				}
-			}
-			else
-			{
-				// Turning OFF: hide each segment individually so
-				// per-segment toggle buttons still work
-				for (let tmpIdx in tmpEditorView._segmentEditors)
-				{
-					tmpEditorView.toggleSegmentPreview(parseInt(tmpIdx, 10), false);
-				}
-			}
+			tmpEditorView.setPreviewMode(pMode);
 		}
 	}
 

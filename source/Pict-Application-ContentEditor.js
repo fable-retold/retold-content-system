@@ -117,7 +117,7 @@ class ContentEditorApplication extends libPictApplication
 			// Settings
 			AutoSegmentMarkdown: false,
 			AutoSegmentDepth: 1,
-			AutoContentPreview: true,
+			ContentPreviewMode: 'off',
 			MarkdownEditingControls: true,
 			MarkdownWordWrap: true,
 			CodeWordWrap: false,
@@ -738,19 +738,8 @@ class ContentEditorApplication extends libPictApplication
 					tmpEditorView.render();
 					tmpEditorView.marshalToView();
 
-					// Always ensure the global preview class is clear so
-					// per-segment toggles work.
-					tmpEditorView.togglePreview(true);
-
-					// Set per-segment preview visibility based on the
-					// Auto Content Preview setting.  We must always loop
-					// to clear any stale _hiddenPreviewSegments state
-					// from previous file loads.
-					let tmpShowPreviews = !!tmpSelf.pict.AppData.ContentEditor.AutoContentPreview;
-					for (let tmpIdx in tmpEditorView._segmentEditors)
-					{
-						tmpEditorView.toggleSegmentPreview(parseInt(tmpIdx, 10), tmpShowPreviews);
-					}
+					// Apply the Content Preview Mode setting
+					tmpEditorView.setPreviewMode(tmpSelf.pict.AppData.ContentEditor.ContentPreviewMode || 'off');
 
 					// Apply the Editing Controls setting (line numbers
 					// and right sidebar) via the library's toggleControls.
@@ -1426,7 +1415,7 @@ class ContentEditorApplication extends libPictApplication
 		{
 			AutoSegmentMarkdown: tmpSettings.AutoSegmentMarkdown,
 			AutoSegmentDepth: tmpSettings.AutoSegmentDepth,
-			AutoContentPreview: tmpSettings.AutoContentPreview,
+			ContentPreviewMode: tmpSettings.ContentPreviewMode,
 			MarkdownEditingControls: tmpSettings.MarkdownEditingControls,
 			MarkdownWordWrap: tmpSettings.MarkdownWordWrap,
 			CodeWordWrap: tmpSettings.CodeWordWrap,
@@ -1479,9 +1468,14 @@ class ContentEditorApplication extends libPictApplication
 			{
 				tmpSettings.AutoSegmentDepth = tmpStored.AutoSegmentDepth;
 			}
-			if (typeof (tmpStored.AutoContentPreview) === 'boolean')
+			if (typeof (tmpStored.ContentPreviewMode) === 'string')
 			{
-				tmpSettings.AutoContentPreview = tmpStored.AutoContentPreview;
+				tmpSettings.ContentPreviewMode = tmpStored.ContentPreviewMode;
+			}
+			else if (typeof (tmpStored.AutoContentPreview) === 'boolean')
+			{
+				// Backward compat: migrate old boolean setting
+				tmpSettings.ContentPreviewMode = tmpStored.AutoContentPreview ? 'bottom' : 'off';
 			}
 			if (typeof (tmpStored.MarkdownEditingControls) === 'boolean')
 			{

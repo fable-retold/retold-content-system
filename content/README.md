@@ -21,6 +21,13 @@ Here is a simple example with some formatting:
 console.log('Hello from the content system!');
 ```
 
+$$
+\begin{aligned}
+f(x) &= x^2 + 2x + 1 \\
+     &= (x + 1)^2
+\end{aligned}
+$$
+
 > Blockquotes work too.
 
 Happy writing!
