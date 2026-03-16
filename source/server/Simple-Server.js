@@ -9,15 +9,15 @@
  * Usage:
  *   npm run build-all   (build client bundles first)
  *   npm start           (start this server)
- *   Open http://localhost:8086       (reader mode)
- *   Open http://localhost:8086/edit.html  (editor mode)
+ *   Open http://localhost:8777       (reader mode)
+ *   Open http://localhost:8777/edit.html  (editor mode)
  */
 
 const libPath = require('path');
 const libSetupServer = require('../cli/ContentSystem-Server-Setup.js');
 
 const tmpProjectRoot = libPath.join(__dirname, '..', '..');
-let tmpPort = parseInt(process.env.PORT, 10) || 8086;
+let tmpPort = parseInt(process.env.PORT, 10) || 8777;
 
 libSetupServer(
 	{
