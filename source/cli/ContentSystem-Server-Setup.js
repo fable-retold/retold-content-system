@@ -402,6 +402,15 @@ function setupContentSystemServer(pOptions, fCallback)
 			tmpOrator.startService(
 				function ()
 				{
+					// --- Optional Ultravisor Beacon Integration ---
+					// When pOptions.Beacon is provided and Enabled is true,
+					// register this content system as a beacon worker.
+					let tmpBeaconConfig = pOptions.Beacon || {};
+					if (tmpBeaconConfig.Enabled)
+					{
+						_initializeBeacon(tmpFable, tmpContentPath, tmpBeaconConfig);
+					}
+
 					return fCallback(null,
 					{
 						Fable: tmpFable,
@@ -410,6 +419,268 @@ function setupContentSystemServer(pOptions, fCallback)
 					});
 				});
 		});
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Ultravisor Beacon Integration
+// ═══════════════════════════════════════════════════════════════════
+
+/**
+ * Initialize the Ultravisor beacon service and register ContentSystem
+ * capabilities.  This is opt-in — only called when Beacon.Enabled is true.
+ *
+ * @param {object} pFable - Fable instance
+ * @param {string} pContentPath - Resolved content directory path
+ * @param {object} pBeaconConfig - Beacon configuration object
+ */
+function _initializeBeacon(pFable, pContentPath, pBeaconConfig)
+{
+	let libBeaconService;
+	try
+	{
+		libBeaconService = require('ultravisor-beacon');
+	}
+	catch (pError)
+	{
+		pFable.log.warn(`Content System Beacon: ultravisor-beacon not installed. Skipping beacon init.`);
+		return;
+	}
+
+	pFable.serviceManager.addAndInstantiateServiceType('UltravisorBeacon', libBeaconService, pBeaconConfig);
+	let tmpBeacon = pFable.services.UltravisorBeacon;
+
+	tmpBeacon.registerCapability({
+		Capability: 'ContentSystem',
+		Name: 'ContentSystemProvider',
+		actions:
+		{
+			'ReadFile':
+			{
+				Description: 'Read a content file',
+				SettingsSchema: [
+					{ Name: 'FilePath', DataType: 'String', Required: true }
+				],
+				Handler: function (pWorkItem, pContext, fCallback)
+				{
+					try
+					{
+						let tmpFilePath = sanitizePath(pWorkItem.Settings.FilePath);
+						if (!tmpFilePath)
+						{
+							return fCallback(null, {
+								Outputs: { Content: '', StdOut: 'Invalid file path.' },
+								Log: ['ReadFile: invalid or unsafe path rejected.']
+							});
+						}
+
+						let tmpFullPath = libPath.join(pContentPath, tmpFilePath);
+						let tmpRealContent = libFs.realpathSync(pContentPath);
+						if (!tmpFullPath.startsWith(tmpRealContent))
+						{
+							return fCallback(null, {
+								Outputs: { Content: '', StdOut: 'Access denied.' },
+								Log: ['ReadFile: path outside content directory.']
+							});
+						}
+
+						if (!libFs.existsSync(tmpFullPath))
+						{
+							return fCallback(null, {
+								Outputs: { Content: '', StdOut: 'File not found.' },
+								Log: [`ReadFile: ${tmpFilePath} not found.`]
+							});
+						}
+
+						let tmpContent = libFs.readFileSync(tmpFullPath, 'utf8');
+						pFable.log.info(`Beacon ReadFile: ${tmpFilePath} (${tmpContent.length} bytes)`);
+						return fCallback(null, {
+							Outputs: { Content: tmpContent, StdOut: `Read ${tmpContent.length} bytes from ${tmpFilePath}` },
+							Log: [`ReadFile: read ${tmpContent.length} bytes from ${tmpFilePath}`]
+						});
+					}
+					catch (pError)
+					{
+						return fCallback(pError);
+					}
+				}
+			},
+
+			'SaveFile':
+			{
+				Description: 'Save content to a file',
+				SettingsSchema: [
+					{ Name: 'FilePath', DataType: 'String', Required: true },
+					{ Name: 'Content', DataType: 'String', Required: true }
+				],
+				Handler: function (pWorkItem, pContext, fCallback)
+				{
+					try
+					{
+						let tmpFilePath = sanitizePath(pWorkItem.Settings.FilePath);
+						if (!tmpFilePath)
+						{
+							return fCallback(null, {
+								Outputs: { FilePath: '', StdOut: 'Invalid file path.' },
+								Log: ['SaveFile: invalid or unsafe path rejected.']
+							});
+						}
+
+						let tmpFullPath = libPath.join(pContentPath, tmpFilePath);
+						let tmpRealContent = libFs.realpathSync(pContentPath);
+						let tmpTargetDir = libPath.dirname(tmpFullPath);
+						if (!tmpTargetDir.startsWith(tmpRealContent))
+						{
+							return fCallback(null, {
+								Outputs: { FilePath: '', StdOut: 'Access denied.' },
+								Log: ['SaveFile: path outside content directory.']
+							});
+						}
+
+						// Ensure directory exists
+						if (!libFs.existsSync(tmpTargetDir))
+						{
+							libFs.mkdirSync(tmpTargetDir, { recursive: true });
+						}
+
+						let tmpContent = pWorkItem.Settings.Content || '';
+						libFs.writeFileSync(tmpFullPath, tmpContent, 'utf8');
+						pFable.log.info(`Beacon SaveFile: ${tmpFilePath} (${tmpContent.length} bytes)`);
+						return fCallback(null, {
+							Outputs: { FilePath: tmpFilePath, StdOut: `Saved ${tmpContent.length} bytes to ${tmpFilePath}` },
+							Log: [`SaveFile: wrote ${tmpContent.length} bytes to ${tmpFilePath}`]
+						});
+					}
+					catch (pError)
+					{
+						return fCallback(pError);
+					}
+				}
+			},
+
+			'ListFiles':
+			{
+				Description: 'List files in a content directory',
+				SettingsSchema: [
+					{ Name: 'Path', DataType: 'String', Required: false }
+				],
+				Handler: function (pWorkItem, pContext, fCallback)
+				{
+					try
+					{
+						let tmpRelPath = pWorkItem.Settings.Path || '';
+						let tmpSafePath = tmpRelPath ? sanitizePath(tmpRelPath) : '';
+						let tmpTargetPath = tmpSafePath
+							? libPath.join(pContentPath, tmpSafePath)
+							: pContentPath;
+
+						let tmpRealContent = libFs.realpathSync(pContentPath);
+						if (!tmpTargetPath.startsWith(tmpRealContent))
+						{
+							return fCallback(null, {
+								Outputs: { Files: '[]', StdOut: 'Access denied.' },
+								Log: ['ListFiles: path outside content directory.']
+							});
+						}
+
+						if (!libFs.existsSync(tmpTargetPath))
+						{
+							return fCallback(null, {
+								Outputs: { Files: '[]', StdOut: 'Directory not found.' },
+								Log: [`ListFiles: ${tmpSafePath || '/'} not found.`]
+							});
+						}
+
+						let tmpEntries = libFs.readdirSync(tmpTargetPath, { withFileTypes: true });
+						let tmpFiles = tmpEntries.map(function (pEntry)
+						{
+							return {
+								Name: pEntry.name,
+								IsDirectory: pEntry.isDirectory()
+							};
+						});
+
+						pFable.log.info(`Beacon ListFiles: ${tmpSafePath || '/'} (${tmpFiles.length} entries)`);
+						return fCallback(null, {
+							Outputs: { Files: JSON.stringify(tmpFiles), StdOut: `Found ${tmpFiles.length} entries in ${tmpSafePath || '/'}` },
+							Log: [`ListFiles: ${tmpFiles.length} entries in ${tmpSafePath || '/'}`]
+						});
+					}
+					catch (pError)
+					{
+						return fCallback(pError);
+					}
+				}
+			},
+
+			'CreateFolder':
+			{
+				Description: 'Create a folder in the content directory',
+				SettingsSchema: [
+					{ Name: 'Path', DataType: 'String', Required: true }
+				],
+				Handler: function (pWorkItem, pContext, fCallback)
+				{
+					try
+					{
+						let tmpSafePath = sanitizePath(pWorkItem.Settings.Path);
+						if (!tmpSafePath)
+						{
+							return fCallback(null, {
+								Outputs: { StdOut: 'Invalid folder path.' },
+								Log: ['CreateFolder: invalid or unsafe path rejected.']
+							});
+						}
+
+						let tmpFullPath = libPath.join(pContentPath, tmpSafePath);
+						let tmpRealContent = libFs.realpathSync(pContentPath);
+						let tmpTargetParent = libPath.dirname(tmpFullPath);
+						if (libFs.existsSync(tmpTargetParent))
+						{
+							tmpTargetParent = libFs.realpathSync(tmpTargetParent);
+						}
+						if (!tmpTargetParent.startsWith(tmpRealContent))
+						{
+							return fCallback(null, {
+								Outputs: { StdOut: 'Access denied.' },
+								Log: ['CreateFolder: path outside content directory.']
+							});
+						}
+
+						if (libFs.existsSync(tmpFullPath))
+						{
+							return fCallback(null, {
+								Outputs: { StdOut: 'Folder already exists.' },
+								Log: [`CreateFolder: ${tmpSafePath} already exists.`]
+							});
+						}
+
+						libFs.mkdirSync(tmpFullPath, { recursive: true });
+						pFable.log.info(`Beacon CreateFolder: ${tmpSafePath}`);
+						return fCallback(null, {
+							Outputs: { StdOut: `Created folder ${tmpSafePath}` },
+							Log: [`CreateFolder: created ${tmpSafePath}`]
+						});
+					}
+					catch (pError)
+					{
+						return fCallback(pError);
+					}
+				}
+			}
+		}
+	});
+
+	tmpBeacon.enable(function (pError)
+	{
+		if (pError)
+		{
+			pFable.log.warn(`Content System Beacon: enable failed: ${pError.message}`);
+		}
+		else
+		{
+			pFable.log.info('Content System Beacon: enabled and connected to Ultravisor.');
+		}
+	});
 }
 
 module.exports = setupContentSystemServer;

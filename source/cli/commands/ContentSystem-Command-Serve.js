@@ -18,6 +18,15 @@ class ContentSystemCommandServe extends libCommandLineCommand
 		this.options.CommandOptions.push(
 			{ Name: '-p, --port [port]', Description: 'Port to serve on (defaults to random 7000-7999).', Default: '0' });
 
+		this.options.CommandOptions.push(
+			{ Name: '-b, --beacon [url]', Description: 'Enable beacon mode and connect to the Ultravisor server at [url] (e.g. http://localhost:54321).' });
+
+		this.options.CommandOptions.push(
+			{ Name: '--beacon-name [name]', Description: 'Beacon identity name (defaults to "content-system-1").', Default: 'content-system-1' });
+
+		this.options.CommandOptions.push(
+			{ Name: '--beacon-password [password]', Description: 'Beacon authentication password.', Default: '' });
+
 		this.addCommand();
 	}
 
@@ -55,6 +64,17 @@ class ContentSystemCommandServe extends libCommandLineCommand
 			this.log.info(`Created content directory: ${tmpContentPath}`);
 		}
 
+		let tmpBeaconConfig = {};
+		if (this.CommandOptions.beacon)
+		{
+			tmpBeaconConfig = {
+				Enabled: true,
+				ServerURL: (typeof this.CommandOptions.beacon === 'string') ? this.CommandOptions.beacon : 'http://localhost:54321',
+				Name: this.CommandOptions.beaconName || 'content-system-1',
+				Password: this.CommandOptions.beaconPassword || ''
+			};
+		}
+
 		let tmpSelf = this;
 		let tmpSetupServer = require('../ContentSystem-Server-Setup.js');
 
@@ -62,7 +82,8 @@ class ContentSystemCommandServe extends libCommandLineCommand
 			{
 				ContentPath: tmpContentPath,
 				DistPath: tmpDistPath,
-				Port: tmpPort
+				Port: tmpPort,
+				Beacon: tmpBeaconConfig
 			},
 			function (pError, pServerInfo)
 			{

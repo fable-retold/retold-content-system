@@ -17,7 +17,7 @@
 		"LICENSE"
 	],
 	"scripts": {
-		"start": "node source/server/Simple-Server.js",
+		"start": "node source/cli/ContentSystem-CLI-Run.js serve",
 		"build": "npx quack build && npx quack copy",
 		"build-codemirror": "node build/build-codemirror-bundle.js",
 		"build-codejar": "node build/build-codejar-bundle.js",
@@ -27,11 +27,14 @@
 	},
 	"author": "steven velozo <steven@velozo.com>",
 	"license": "MIT",
+	"optionalDependencies": {
+		"ultravisor-beacon": "^0.0.1"
+	},
 	"dependencies": {
-		"fable": "^3.1.65",
+		"fable": "^3.1.66",
 		"orator": "^6.0.4",
 		"orator-serviceserver-restify": "^2.0.9",
-		"pict": "^1.0.357",
+		"pict": "^1.0.359",
 		"pict-application": "^1.0.33",
 		"pict-docuserve": "^0.0.32",
 		"pict-provider": "^1.0.12",
@@ -50,7 +53,7 @@
 		"codemirror": "^6.0.2",
 		"esbuild": "^0.27.4",
 		"highlight.js": "^11.11.1",
-		"quackage": "^1.0.64"
+		"quackage": "^1.0.65"
 	},
 	"copyFilesSettings": {
 		"whenFileExists": "overwrite"
