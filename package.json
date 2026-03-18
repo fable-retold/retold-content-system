@@ -1,6 +1,6 @@
 {
 	"name": "retold-content-system",
-	"version": "1.0.11",
+	"version": "1.0.12",
 	"description": "Retold Content System - Markdown content viewer and editor",
 	"main": "source/Pict-ContentSystem-Bundle.js",
 	"bin": {
@@ -28,7 +28,7 @@
 	"author": "steven velozo <steven@velozo.com>",
 	"license": "MIT",
 	"optionalDependencies": {
-		"ultravisor-beacon": "^0.0.1"
+		"ultravisor-beacon": "^0.0.2"
 	},
 	"dependencies": {
 		"fable": "^3.1.66",
