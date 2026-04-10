@@ -1,6 +1,6 @@
 {
 	"name": "retold-content-system",
-	"version": "1.0.12",
+	"version": "1.0.13",
 	"description": "Retold Content System - Markdown content viewer and editor",
 	"main": "source/Pict-ContentSystem-Bundle.js",
 	"bin": {

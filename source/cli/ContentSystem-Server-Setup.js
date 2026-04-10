@@ -368,12 +368,16 @@ function setupContentSystemServer(pOptions, fCallback)
 						let tmpBuffer = Buffer.isBuffer(tmpBody) ? tmpBody : Buffer.from(tmpBody);
 						libFs.writeFileSync(tmpFilePath, tmpBuffer);
 
-						// Build the URL: serve through the /content/ static route
+						// Build the URL.  Use the bare filename so the markdown
+						// reference is relative to the document's own directory.
+						// This makes images portable — they work in the content
+						// system's live server (the preview resolver prepends
+						// the base path), on GitHub Pages, or any static host.
 						let tmpRelativePath = tmpRelativeFolder
 							? (tmpRelativeFolder + '/' + tmpUniqueFilename)
 							: tmpUniqueFilename;
-						let tmpURL = `/content/${tmpRelativePath}`;
-						tmpFable.log.info(`Image uploaded: ${tmpURL} (${tmpBuffer.length} bytes)`);
+						let tmpURL = tmpUniqueFilename;
+						tmpFable.log.info(`Image uploaded: ${tmpURL} -> ${tmpRelativePath} (${tmpBuffer.length} bytes)`);
 
 						pResponse.send(
 						{
