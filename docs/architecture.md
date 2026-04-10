@@ -19,11 +19,11 @@ graph TB
 		BEACON["Ultravisor Beacon<br/>(optional)"]
 	end
 
-	subgraph "Browser — Reader (/)"
+	subgraph "Browser -- Reader (/)"
 		READER["ContentReaderApplication<br/>(extends pict-docuserve)"]
 	end
 
-	subgraph "Browser — Editor (/edit.html)"
+	subgraph "Browser -- Editor (/edit.html)"
 		EDITOR["ContentEditorApplication<br/>(extends pict-application)"]
 		PROVIDER["ContentEditorProvider<br/>(client persistence hooks)"]
 		LAYOUT["Editor views<br/>Layout / TopBar / MarkdownEditor / CodeEditor / Preview / FileBrowser / Topics / Settings"]
@@ -153,7 +153,7 @@ sequenceDiagram
 	FS-->>FB: dir entries
 	FB-->>Editor: file list
 	Editor->>Editor: render Layout, TopBar, FileBrowser
-	Editor->>Editor: resolveHash() — if URL has #/edit/path
+	Editor->>Editor: resolveHash() -- if URL has #/edit/path
 	alt hash has a file
 		Editor->>Editor: navigateToFile(path)
 		Editor->>Provider: loadFile(path, cb)
