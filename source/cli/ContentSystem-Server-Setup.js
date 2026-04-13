@@ -396,6 +396,76 @@ function setupContentSystemServer(pOptions, fCallback)
 					return fNext();
 				});
 
+			// --- GET /api/vocabulary/index ---
+			// Build a vocabulary index from markdown files in a vocabulary/
+			// subfolder of the content tree. Each .md file becomes a term:
+			// the filename (minus .md) is the slug, the H1 is the title,
+			// and the first paragraph is the short definition for popovers.
+			// This endpoint powers pict-provider-vocabulary's auto-linking.
+			tmpServiceServer.get('/api/vocabulary/index',
+				(pRequest, pResponse, fNext) =>
+				{
+					try
+					{
+						let tmpVocabDir = libPath.join(tmpContentPath, 'vocabulary');
+						let tmpIndex = {};
+
+						if (libFs.existsSync(tmpVocabDir))
+						{
+							let tmpFiles = libFs.readdirSync(tmpVocabDir);
+							for (let i = 0; i < tmpFiles.length; i++)
+							{
+								let tmpFile = tmpFiles[i];
+								if (!tmpFile.endsWith('.md')) continue;
+
+								let tmpSlug = tmpFile.replace(/\.md$/i, '');
+								let tmpBody = '';
+								try
+								{
+									tmpBody = libFs.readFileSync(libPath.join(tmpVocabDir, tmpFile), 'utf8');
+								}
+								catch (e) { continue; }
+
+								let tmpTitle = tmpSlug;
+								let tmpTitleMatch = tmpBody.match(/^#\s+(.+)/m);
+								if (tmpTitleMatch) tmpTitle = tmpTitleMatch[1].trim();
+
+								let tmpShort = '';
+								let tmpLines = tmpBody.split('\n');
+								let tmpPastTitle = false;
+								let tmpParaLines = [];
+								for (let j = 0; j < tmpLines.length; j++)
+								{
+									let tmpLine = tmpLines[j];
+									if (!tmpPastTitle)
+									{
+										if (tmpLine.match(/^#\s+/)) tmpPastTitle = true;
+										continue;
+									}
+									if (tmpLine.trim() === '')
+									{
+										if (tmpParaLines.length > 0) break;
+										continue;
+									}
+									if (tmpLine.match(/^#/)) break;
+									tmpParaLines.push(tmpLine.trim());
+								}
+								tmpShort = tmpParaLines.join(' ');
+								if (tmpShort.length > 200) tmpShort = tmpShort.substring(0, 197) + '...';
+
+								tmpIndex[tmpSlug] = { title: tmpTitle, short: tmpShort };
+							}
+						}
+
+						pResponse.send({ Index: tmpIndex });
+					}
+					catch (pError)
+					{
+						pResponse.send(500, { Error: pError.message });
+					}
+					return fNext();
+				});
+
 			// Serve content files (markdown, images, etc.) at /content/
 			tmpOrator.addStaticRoute(`${tmpContentPath}/`, 'index.html', '/content/*', '/content/');
 

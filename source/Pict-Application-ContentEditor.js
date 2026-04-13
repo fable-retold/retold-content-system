@@ -3,6 +3,9 @@ const libPictApplication = require('pict-application');
 // File browser
 const libPictSectionFileBrowser = require('pict-section-filebrowser');
 
+// Vocabulary auto-linking + popover system (shared with retold-labs)
+const libPictProviderVocabulary = require('pict-provider-vocabulary');
+
 // Provider
 const libContentEditorProvider = require('./providers/Pict-Provider-ContentEditor.js');
 
@@ -30,6 +33,26 @@ class ContentEditorApplication extends libPictApplication
 
 		// Register the content editor provider
 		this.pict.addProvider('ContentEditor-Provider', libContentEditorProvider.default_configuration, libContentEditorProvider);
+
+		// Register the vocabulary provider. The content system can
+		// load terms from a vocabulary/ folder in the content tree
+		// via the same API shape retold-labs uses, or from any URL.
+		// Terms auto-link in rendered markdown previews via
+		// pict-section-content's parseMarkdown vocabulary resolver.
+		this.pict.addProvider('Vocabulary',
+			libPictProviderVocabulary.default_configuration,
+			libPictProviderVocabulary);
+
+		// Register the vocabulary management view from the provider.
+		// Mount it at the vocabulary panel container (added to the
+		// layout by the host app — see the layout view below).
+		this.pict.addView('ContentEditor-Vocabulary',
+			Object.assign({}, libPictProviderVocabulary.VocabularyManagerView.default_configuration,
+				{
+					DefaultDestinationAddress: '#ContentEditor-Vocabulary-Container',
+					VocabularyRoute: '#/vocabulary'
+				}),
+			libPictProviderVocabulary.VocabularyManagerView);
 
 		// Register views
 		this.pict.addView('ContentEditor-Layout', libViewLayout.default_configuration, libViewLayout);
@@ -189,6 +212,17 @@ class ContentEditorApplication extends libPictApplication
 					// Silently ignore errors — the file may not exist yet
 				});
 			}
+		}
+
+		// Load vocabulary index for auto-linking. If the content tree
+		// has a vocabulary/ folder, terms auto-link in markdown
+		// previews with hover popovers. No-op if the folder doesn't
+		// exist or the endpoint isn't available — the provider
+		// handles both gracefully.
+		let tmpVocabProvider = this.pict.providers && this.pict.providers.Vocabulary;
+		if (tmpVocabProvider)
+		{
+			tmpVocabProvider.loadFromURL('/api/vocabulary/index');
 		}
 
 		return super.onAfterInitializeAsync(fCallback);
