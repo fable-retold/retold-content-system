@@ -759,12 +759,15 @@ const _ViewConfiguration =
 					onclick="{~P~}.views['ContentEditor-Layout'].switchSidebarTab('reference')">Reference</button>
 				<button class="content-editor-sidebar-tab" id="ContentEditor-SidebarTab-Topics"
 					onclick="{~P~}.views['ContentEditor-Layout'].switchSidebarTab('topics')">Topics</button>
+				<button class="content-editor-sidebar-tab" id="ContentEditor-SidebarTab-Vocabulary"
+					onclick="{~P~}.views['ContentEditor-Layout'].switchSidebarTab('vocabulary')">Vocab</button>
 				<button class="content-editor-sidebar-addfile" title="New file"
 					onclick="{~P~}.PictApplication.promptNewFile()">+</button>
 			</div>
 			<div id="ContentEditor-Sidebar-Container" class="content-editor-sidebar-pane"></div>
 			<div id="ContentEditor-SidebarReference-Container" class="content-editor-sidebar-pane" style="display:none"></div>
 			<div id="ContentEditor-SidebarTopics-Container" class="content-editor-sidebar-pane" style="display:none"></div>
+			<div id="ContentEditor-Vocabulary-Container" class="content-editor-sidebar-pane" style="display:none"></div>
 		</div>
 		<div class="content-editor-resize-handle" id="ContentEditor-ResizeHandle"></div>
 		<div class="content-editor-sidebar-toggle" id="ContentEditor-SidebarToggle">&#x25C0;</div>
@@ -1015,14 +1018,16 @@ class ContentEditorLayoutView extends libPictView
 		{
 			files: document.getElementById('ContentEditor-Sidebar-Container'),
 			reference: document.getElementById('ContentEditor-SidebarReference-Container'),
-			topics: document.getElementById('ContentEditor-SidebarTopics-Container')
+			topics: document.getElementById('ContentEditor-SidebarTopics-Container'),
+			vocabulary: document.getElementById('ContentEditor-Vocabulary-Container')
 		};
 
 		let tmpTabs =
 		{
 			files: document.getElementById('ContentEditor-SidebarTab-Files'),
 			reference: document.getElementById('ContentEditor-SidebarTab-Reference'),
-			topics: document.getElementById('ContentEditor-SidebarTab-Topics')
+			topics: document.getElementById('ContentEditor-SidebarTab-Topics'),
+			vocabulary: document.getElementById('ContentEditor-SidebarTab-Vocabulary')
 		};
 
 		// Hide all panes and deactivate all tabs
@@ -1040,7 +1045,7 @@ class ContentEditorLayoutView extends libPictView
 		let tmpWrap = document.getElementById('ContentEditor-SidebarWrap');
 		if (tmpWrap)
 		{
-			if (pTab === 'reference' || pTab === 'topics')
+			if (pTab === 'reference' || pTab === 'topics' || pTab === 'vocabulary')
 			{
 				tmpWrap.classList.add('sidebar-expanded-pane');
 			}
@@ -1067,6 +1072,16 @@ class ContentEditorLayoutView extends libPictView
 			if (tmpTopicsView && !tmpTopicsView._hasRendered)
 			{
 				tmpTopicsView.render();
+			}
+		}
+
+		// Lazy-render the Vocabulary view on first switch
+		if (pTab === 'vocabulary')
+		{
+			let tmpVocabView = this.pict.views['ContentEditor-Vocabulary'];
+			if (tmpVocabView)
+			{
+				tmpVocabView.refreshTermList();
 			}
 		}
 	}
