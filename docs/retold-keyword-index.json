@@ -1,6 +1,6 @@
 {
-	"Generated": "2026-04-10T17:27:46.933Z",
-	"DocumentCount": 0,
+	"Generated": "2026-04-14T17:37:09.971Z",
+	"DocumentCount": 1,
 	"LunrIndex": {
 		"version": "2.3.9",
 		"fields": [
@@ -9,11 +9,170 @@
 			"group",
 			"body"
 		],
-		"fieldVectors": [],
-		"invertedIndex": [],
+		"fieldVectors": [
+			[
+				"title/docs/vocabulary/vocabulary/apple.md",
+				[
+					0,
+					1.823
+				]
+			],
+			[
+				"module/docs/vocabulary/vocabulary/apple.md",
+				[
+					1,
+					1.438
+				]
+			],
+			[
+				"group/docs/vocabulary/vocabulary/apple.md",
+				[
+					2,
+					0.863
+				]
+			],
+			[
+				"body/docs/vocabulary/vocabulary/apple.md",
+				[
+					0,
+					0.182,
+					3,
+					0.288,
+					4,
+					0.288,
+					5,
+					0.288,
+					6,
+					0.288,
+					7,
+					0.396,
+					8,
+					0.288
+				]
+			]
+		],
+		"invertedIndex": [
+			[
+				"",
+				{
+					"_index": 7,
+					"title": {},
+					"module": {},
+					"group": {},
+					"body": {
+						"docs/vocabulary/vocabulary/apple.md": {}
+					}
+				}
+			],
+			[
+				"appl",
+				{
+					"_index": 0,
+					"title": {
+						"docs/vocabulary/vocabulary/apple.md": {}
+					},
+					"module": {},
+					"group": {},
+					"body": {
+						"docs/vocabulary/vocabulary/apple.md": {}
+					}
+				}
+			],
+			[
+				"definit",
+				{
+					"_index": 3,
+					"title": {},
+					"module": {},
+					"group": {},
+					"body": {
+						"docs/vocabulary/vocabulary/apple.md": {}
+					}
+				}
+			],
+			[
+				"doc",
+				{
+					"_index": 2,
+					"title": {},
+					"module": {},
+					"group": {
+						"docs/vocabulary/vocabulary/apple.md": {}
+					},
+					"body": {}
+				}
+			],
+			[
+				"goe",
+				{
+					"_index": 4,
+					"title": {},
+					"module": {},
+					"group": {},
+					"body": {
+						"docs/vocabulary/vocabulary/apple.md": {}
+					}
+				}
+			],
+			[
+				"here",
+				{
+					"_index": 5,
+					"title": {},
+					"module": {},
+					"group": {},
+					"body": {
+						"docs/vocabulary/vocabulary/apple.md": {}
+					}
+				}
+			],
+			[
+				"librari",
+				{
+					"_index": 6,
+					"title": {},
+					"module": {},
+					"group": {},
+					"body": {
+						"docs/vocabulary/vocabulary/apple.md": {}
+					}
+				}
+			],
+			[
+				"see",
+				{
+					"_index": 8,
+					"title": {},
+					"module": {},
+					"group": {},
+					"body": {
+						"docs/vocabulary/vocabulary/apple.md": {}
+					}
+				}
+			],
+			[
+				"vocabulari",
+				{
+					"_index": 1,
+					"title": {},
+					"module": {
+						"docs/vocabulary/vocabulary/apple.md": {}
+					},
+					"group": {},
+					"body": {}
+				}
+			]
+		],
 		"pipeline": [
 			"stemmer"
 		]
 	},
-	"Documents": {}
+	"Documents": {
+		"docs/vocabulary/vocabulary/apple.md": {
+			"Title": "Apple",
+			"Module": "vocabulary",
+			"Group": "docs",
+			"DocPath": "vocabulary/apple.md"
+		}
+	}
 }

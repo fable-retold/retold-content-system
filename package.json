@@ -1,6 +1,6 @@
 {
 	"name": "retold-content-system",
-	"version": "1.0.15",
+	"version": "1.0.16",
 	"description": "Retold Content System - Markdown content viewer and editor",
 	"main": "source/Pict-ContentSystem-Bundle.js",
 	"bin": {
@@ -31,17 +31,19 @@
 		"ultravisor-beacon": "^0.0.11"
 	},
 	"dependencies": {
-		"fable": "^3.1.68",
+		"fable": "^3.1.70",
 		"orator": "^6.0.4",
 		"orator-serviceserver-restify": "^2.0.10",
 		"pict": "^1.0.363",
 		"pict-application": "^1.0.33",
 		"pict-provider": "^1.0.12",
+		"pict-provider-vocabulary": "^0.0.6",
 		"pict-section-code": "^1.0.4",
-		"pict-provider-vocabulary": "file:../../pict/pict-provider-vocabulary",
-		"pict-section-content": "^0.1.4",
+		"pict-section-content": "^0.1.5",
 		"pict-section-filebrowser": "^0.0.2",
-		"pict-section-markdowneditor": "^1.0.9",
+		"pict-section-inlinedocumentation": "^0.0.5",
+		"pict-section-markdowneditor": "^1.0.10",
+		"pict-section-modal": "^0.0.4",
 		"pict-service-commandlineutility": "^1.0.19",
 		"pict-view": "^1.0.68"
 	},

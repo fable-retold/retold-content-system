@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "content-system",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["source/cli/ContentSystem-CLI-Run.js", "serve", "docs", "-p", "7445"],
+      "port": 7445
+    }
+  ]
+}

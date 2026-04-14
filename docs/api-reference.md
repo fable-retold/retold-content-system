@@ -29,7 +29,7 @@ Normally instantiated by the Pict loader (`Pict.safeLoadPictApplication(PictCont
 | `promptNewFile()` | Open a prompt for a new file name (relative to the current folder) and call `createNewFile`. |
 | `promptNewFolder()` | Open a prompt for a new folder name and call `POST /api/content/mkdir`. |
 | `loadFileList(pPath, fCallback)` | Fetch a folder's contents via the FileBrowserService. `fCallback(pError, pFiles)`. |
-| `insertFileReference(pFilename)` | Insert a relative reference to a file into the editor at the cursor. For images, inserts `![alt](path)`; for other files, inserts a plain link. |
+| `insertFileReference(pFilename)` | Insert a relative reference to a file into the editor at the cursor. For images, inserts `!\[alt](path)`; for other files, inserts a plain link. |
 
 ### Content Helpers
 
@@ -100,7 +100,7 @@ Upload an image file to storage.
 
 **Default behavior:** determines the target folder from `AppData.ContentEditor.CurrentFile` (the directory of the file being edited) or `AppData.PictFileBrowser.CurrentLocation` (if nothing is open), then `POST /api/content/upload-image` with the raw bytes in the body and the filename + upload path in `x-filename` / `x-upload-path` headers.
 
-**To override:** subclass and replace with any upload logic. The returned URL will be inserted directly into the markdown as `![alt](url)` -- make sure it is accessible from the browser at that path.
+**To override:** subclass and replace with any upload logic. The returned URL will be inserted directly into the markdown as `!\[alt](url)` -- make sure it is accessible from the browser at that path.
 
 ### Default Configuration
 

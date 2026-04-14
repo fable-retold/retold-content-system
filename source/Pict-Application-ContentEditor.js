@@ -6,6 +6,15 @@ const libPictSectionFileBrowser = require('pict-section-filebrowser');
 // Vocabulary auto-linking + popover system (shared with retold-labs)
 const libPictProviderVocabulary = require('pict-provider-vocabulary');
 
+// Inline documentation (right-side panel)
+const libPictSectionInlineDocumentation = require('pict-section-inlinedocumentation');
+
+// Modal system (panels, dialogs, tooltips, toasts)
+const libPictSectionModal = require('pict-section-modal');
+
+// Content rendering
+const libPictSectionContent = require('pict-section-content');
+
 // Provider
 const libContentEditorProvider = require('./providers/Pict-Provider-ContentEditor.js');
 
@@ -44,15 +53,43 @@ class ContentEditorApplication extends libPictApplication
 			libPictProviderVocabulary);
 
 		// Register the vocabulary management view from the provider.
-		// Mount it at the vocabulary panel container (added to the
-		// layout by the host app — see the layout view below).
+		// Mount it at the vocabulary panel container in the sidebar.
+		// The onEditTerm callback opens the term file in the main
+		// markdown editor instead of rendering an inline textarea.
+		let tmpPictRef = this.pict;
 		this.pict.addView('ContentEditor-Vocabulary',
 			Object.assign({}, libPictProviderVocabulary.VocabularyManagerView.default_configuration,
 				{
 					DefaultDestinationAddress: '#ContentEditor-Vocabulary-Container',
-					VocabularyRoute: '#/vocabulary'
+					VocabularyRoute: '#/vocabulary',
+					VocabularyFolderPath: 'vocabulary/',
+					onEditTerm: function (pSlug, pFilePath)
+					{
+						// Open the vocabulary term file in the main editor
+						if (tmpPictRef && tmpPictRef.PictApplication && typeof tmpPictRef.PictApplication.navigateToFile === 'function')
+						{
+							tmpPictRef.PictApplication.navigateToFile(pFilePath);
+						}
+					}
 				}),
 			libPictProviderVocabulary.VocabularyManagerView);
+
+		// Inline documentation provider — powers the right-side
+		// documentation panel. Renders markdown docs from the content
+		// tree's docs/ folder with topic navigation, editing, and
+		// vocabulary auto-linking.
+		this.pict.addProvider('Pict-InlineDocumentation',
+			libPictSectionInlineDocumentation.default_configuration,
+			libPictSectionInlineDocumentation);
+
+		// Content rendering provider (for markdown parsing with
+		// vocabulary resolver in the documentation panel).
+		this.pict.addProvider('Pict-Content',
+			libPictSectionContent.PictContentProvider.default_configuration,
+			libPictSectionContent.PictContentProvider);
+
+		// Register the modal system (panels, dialogs, tooltips, toasts)
+		this.pict.addView('Pict-Section-Modal', libPictSectionModal.default_configuration, libPictSectionModal);
 
 		// Register views
 		this.pict.addView('ContentEditor-Layout', libViewLayout.default_configuration, libViewLayout);
@@ -118,6 +155,17 @@ class ContentEditorApplication extends libPictApplication
 		if (typeof (window) !== 'undefined')
 		{
 			window.pict = this.pict;
+
+			// Warn the user before closing the tab/window with unsaved changes
+			let tmpPictRef = this.pict;
+			window.addEventListener('beforeunload', function (pEvent)
+			{
+				if (tmpPictRef.AppData.ContentEditor && tmpPictRef.AppData.ContentEditor.IsDirty)
+				{
+					pEvent.preventDefault();
+					pEvent.returnValue = '';
+				}
+			});
 		}
 
 		// Initialize application state
@@ -223,6 +271,76 @@ class ContentEditorApplication extends libPictApplication
 		if (tmpVocabProvider)
 		{
 			tmpVocabProvider.loadFromURL('/api/vocabulary/index');
+		}
+
+		// Initialize the inline documentation panel. It reads from
+		// the content tree's /content/ path via the same server.
+		// The panel starts collapsed — the user expands it via the
+		// edge tab or the Docs button in the top bar.
+		// Initialize the inline documentation panel, then attach the
+		// resizable/collapsible panel behavior once the layout has
+		// rendered into the container. The panel() call must happen
+		// AFTER the async render so the edge element isn't wiped out.
+		let tmpDocProvider = this.pict.providers && this.pict.providers['Pict-InlineDocumentation'];
+		if (tmpDocProvider && typeof tmpDocProvider.initializeDocumentation === 'function')
+		{
+			let tmpSelfApp = this;
+			tmpDocProvider.initializeDocumentation(
+				{
+					DocsBaseURL: '/content/',
+					ContainerAddress: '#ContentEditor-Documentation-Panel',
+					SearchIndexURL: '/content/retold-keyword-index.json',
+					ExternalDocBaseURL: 'https://stevenvelozo.github.io/retold/#/doc/',
+					EditEnabled: false,
+					TopicManagerEnabled: false
+				},
+				function ()
+				{
+					// Layout has rendered — attach resize + collapse.
+					// Full persistence: width and collapsed state both
+					// survive across page loads via localStorage.
+					let tmpModal = tmpSelfApp.pict.views['Pict-Section-Modal'];
+					if (tmpModal && typeof tmpModal.panel === 'function')
+					{
+						tmpSelfApp._docPanel = tmpModal.panel('#ContentEditor-Documentation-Panel',
+							{
+								position: 'right',
+								width: 340,
+								minWidth: 260,
+								maxWidth: 600,
+								collapsible: true,
+								collapsed: true,
+								persist: true,
+								persistKey: 'ContentEditor-DocPanel'
+							});
+					}
+
+					// Restore the last-viewed document from localStorage,
+					// or default to README.md. This ensures the panel
+					// shows the right content whether it starts collapsed
+					// or expanded from persisted state.
+					let tmpInlineDoc = tmpSelfApp.pict.providers['Pict-InlineDocumentation'];
+					if (tmpInlineDoc && typeof tmpInlineDoc.loadDocument === 'function')
+					{
+						let tmpLastDoc = 'README.md';
+						try
+						{
+							let tmpStored = localStorage.getItem('ContentEditor-DocPanel-LastDoc');
+							if (tmpStored) tmpLastDoc = tmpStored;
+						}
+						catch (e) { /* ignore */ }
+						tmpInlineDoc.loadDocument(tmpLastDoc);
+
+						// Persist the current document path on each navigation
+						let tmpOrigLoad = tmpInlineDoc.loadDocument.bind(tmpInlineDoc);
+						tmpInlineDoc.loadDocument = function (pPath, fCb)
+						{
+							try { localStorage.setItem('ContentEditor-DocPanel-LastDoc', pPath); }
+							catch (e) { /* ignore */ }
+							return tmpOrigLoad(pPath, fCb);
+						};
+					}
+				});
 		}
 
 		return super.onAfterInitializeAsync(fCallback);
@@ -488,7 +606,7 @@ class ContentEditorApplication extends libPictApplication
 	 */
 	loadMediaPreview(pMediaType, pContentURL, pFileName)
 	{
-		let tmpContainer = document.getElementById('ContentEditor-MediaPreviewPlaceholder');
+		let tmpContainer = this.pict.ContentAssignment.getElement('#ContentEditor-MediaPreviewPlaceholder')[0];
 		if (!tmpContainer)
 		{
 			return;
@@ -702,6 +820,37 @@ class ContentEditorApplication extends libPictApplication
 		if (!pFilePath)
 		{
 			return;
+		}
+
+		// Guard: if the current file has unsaved changes, confirm
+		// before navigating away.  This catches all entry points —
+		// file browser clicks, vocabulary edits, topic navigation,
+		// hash changes, and new file creation.
+		if (this.pict.AppData.ContentEditor.IsDirty)
+		{
+			let tmpSelf = this;
+			let tmpModal = this.pict.views['Pict-Section-Modal'];
+			if (tmpModal && typeof tmpModal.confirm === 'function')
+			{
+				tmpModal.confirm(
+					'You have unsaved changes to ' + this.pict.AppData.ContentEditor.CurrentFile + '. Discard and open a different file?',
+					{ title: 'Unsaved Changes', confirmLabel: 'Discard', dangerous: true })
+					.then(function (pConfirmed)
+					{
+						if (pConfirmed)
+						{
+							tmpSelf.pict.AppData.ContentEditor.IsDirty = false;
+							tmpSelf.navigateToFile(pFilePath);
+						}
+					});
+				return;
+			}
+			// Fallback: native confirm
+			if (typeof confirm !== 'undefined' && !confirm('You have unsaved changes. Discard and open a different file?'))
+			{
+				return;
+			}
+			this.pict.AppData.ContentEditor.IsDirty = false;
 		}
 
 		let tmpSelf = this;
@@ -981,7 +1130,7 @@ class ContentEditorApplication extends libPictApplication
 	 */
 	_showCloseConfirmation()
 	{
-		let tmpOverlay = document.getElementById('ContentEditor-ConfirmOverlay');
+		let tmpOverlay = this.pict.ContentAssignment.getElement('#ContentEditor-ConfirmOverlay')[0];
 		if (tmpOverlay)
 		{
 			tmpOverlay.classList.add('open');
@@ -1015,7 +1164,7 @@ class ContentEditorApplication extends libPictApplication
 	 */
 	_hideCloseConfirmation()
 	{
-		let tmpOverlay = document.getElementById('ContentEditor-ConfirmOverlay');
+		let tmpOverlay = this.pict.ContentAssignment.getElement('#ContentEditor-ConfirmOverlay')[0];
 		if (tmpOverlay)
 		{
 			tmpOverlay.classList.remove('open');
@@ -1355,7 +1504,7 @@ class ContentEditorApplication extends libPictApplication
 	 */
 	updateStats()
 	{
-		let tmpStatsEl = document.getElementById('ContentEditor-Stats');
+		let tmpStatsEl = this.pict.ContentAssignment.getElement('#ContentEditor-Stats')[0];
 		if (!tmpStatsEl)
 		{
 			return;

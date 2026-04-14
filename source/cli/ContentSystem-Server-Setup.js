@@ -466,6 +466,94 @@ function setupContentSystemServer(pOptions, fCallback)
 					return fNext();
 				});
 
+			// --- GET /api/vocabulary/term/:slug ---
+			// Read a single vocabulary term's markdown body.
+			tmpServiceServer.get('/api/vocabulary/term/:slug',
+				(pRequest, pResponse, fNext) =>
+				{
+					try
+					{
+						let tmpSlug = sanitizePath(pRequest.params.slug);
+						if (!tmpSlug)
+						{
+							pResponse.send(400, { Error: 'Invalid slug' });
+							return fNext();
+						}
+						let tmpFile = libPath.join(tmpContentPath, 'vocabulary', tmpSlug + '.md');
+						if (!libFs.existsSync(tmpFile))
+						{
+							pResponse.send(404, { Error: 'Term not found: ' + tmpSlug });
+							return fNext();
+						}
+						let tmpBody = libFs.readFileSync(tmpFile, 'utf8');
+						pResponse.send({ Slug: tmpSlug, Body: tmpBody });
+					}
+					catch (pError)
+					{
+						pResponse.send(500, { Error: pError.message });
+					}
+					return fNext();
+				});
+
+			// --- PUT /api/vocabulary/term/:slug ---
+			// Create or update a vocabulary term.
+			tmpServiceServer.put('/api/vocabulary/term/:slug',
+				(pRequest, pResponse, fNext) =>
+				{
+					try
+					{
+						let tmpSlug = sanitizePath(pRequest.params.slug);
+						if (!tmpSlug)
+						{
+							pResponse.send(400, { Error: 'Invalid slug' });
+							return fNext();
+						}
+						let tmpVocabDir = libPath.join(tmpContentPath, 'vocabulary');
+						if (!libFs.existsSync(tmpVocabDir))
+						{
+							libFs.mkdirSync(tmpVocabDir, { recursive: true });
+						}
+						let tmpBody = (pRequest.body && pRequest.body.body) || '';
+						let tmpFile = libPath.join(tmpVocabDir, tmpSlug + '.md');
+						libFs.writeFileSync(tmpFile, tmpBody, 'utf8');
+						pResponse.send({ Success: true, Slug: tmpSlug });
+					}
+					catch (pError)
+					{
+						pResponse.send(500, { Error: pError.message });
+					}
+					return fNext();
+				});
+
+			// --- DELETE /api/vocabulary/term/:slug ---
+			// Delete a vocabulary term's markdown file.
+			tmpServiceServer.del('/api/vocabulary/term/:slug',
+				(pRequest, pResponse, fNext) =>
+				{
+					try
+					{
+						let tmpSlug = sanitizePath(pRequest.params.slug);
+						if (!tmpSlug)
+						{
+							pResponse.send(400, { Error: 'Invalid slug' });
+							return fNext();
+						}
+						let tmpFile = libPath.join(tmpContentPath, 'vocabulary', tmpSlug + '.md');
+						if (!libFs.existsSync(tmpFile))
+						{
+							pResponse.send(404, { Error: 'Term not found: ' + tmpSlug });
+							return fNext();
+						}
+						libFs.unlinkSync(tmpFile);
+						pResponse.send({ Success: true, Slug: tmpSlug });
+					}
+					catch (pError)
+					{
+						pResponse.send(500, { Error: pError.message });
+					}
+					return fNext();
+				});
+
 			// Serve content files (markdown, images, etc.) at /content/
 			tmpOrator.addStaticRoute(`${tmpContentPath}/`, 'index.html', '/content/*', '/content/');
 

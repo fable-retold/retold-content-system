@@ -298,6 +298,67 @@ const _ViewConfiguration =
 	</div>
 </div>
 `
+		},
+		{
+			Hash: "Topics-Row-Template",
+			Template: /*html*/`
+<div class="topics-row" ondblclick="{~P~}.views['{~D:Record.ViewHash~}'].startEditTopic('{~D:Record.CodeEscaped~}')">
+  <div class="topics-row-info">
+    <div class="topics-row-code">{~D:Record.Code~}</div>
+    <div class="topics-row-title">{~D:Record.Title~}</div>
+    <div class="topics-row-path">{~D:Record.PathDisplay~}</div>
+  </div>
+  <div class="topics-row-actions">
+    <button class="topics-row-btn" title="Edit" onclick="event.stopPropagation();{~P~}.views['{~D:Record.ViewHash~}'].startEditTopic('{~D:Record.CodeEscaped~}')"><svg width="1em" height="1em" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 1.5l3 3L5 14H2v-3z"/><line x1="9" y1="4" x2="12" y2="7"/></svg></button>
+    <button class="topics-row-btn topics-row-btn-delete" title="Delete" onclick="event.stopPropagation();{~P~}.views['{~D:Record.ViewHash~}'].removeTopic('{~D:Record.CodeEscaped~}')"><svg width="1em" height="1em" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="4" y1="4" x2="12" y2="12"/><line x1="12" y1="4" x2="4" y2="12"/></svg></button>
+    {~D:Record.NavigateButton~}
+  </div>
+</div>
+`
+		},
+		{
+			Hash: "Topics-EditForm-Template",
+			Template: /*html*/`
+<div class="topics-edit">
+  <div class="topics-edit-field">
+    <label class="topics-edit-label">Topic Code</label>
+    <input class="topics-edit-input" id="topics-edit-code" type="text" value="{~D:Record.Code~}" placeholder="My-Topic-Code">
+  </div>
+  <div class="topics-edit-field">
+    <label class="topics-edit-label">Title</label>
+    <input class="topics-edit-input" id="topics-edit-title" type="text" value="{~D:Record.Title~}" placeholder="Topic title">
+  </div>
+  <div class="topics-edit-field">
+    <label class="topics-edit-label">Help File Path</label>
+    <input class="topics-edit-input" id="topics-edit-path" type="text" value="{~D:Record.Path~}" placeholder="path/to/file.md">
+  </div>
+  <div class="topics-edit-field">
+    <label class="topics-edit-label">Line Number (optional)</label>
+    <input class="topics-edit-input" id="topics-edit-line" type="number" value="{~D:Record.Line~}" placeholder="e.g. 23" min="1">
+  </div>
+  <div class="topics-edit-actions">
+    <button class="topics-edit-save" onclick="{~P~}.views['{~D:Record.ViewHash~}'].saveEditTopic('{~D:Record.OriginalCode~}')">Save</button>
+    <button class="topics-edit-cancel" onclick="{~P~}.views['{~D:Record.ViewHash~}'].cancelEditTopic()">Cancel</button>
+  </div>
+</div>
+`
+		},
+		{
+			Hash: "Topics-Empty-Template",
+			Template: /*html*/`
+<div class="topics-empty">
+  <div class="topics-empty-icon"><svg width="1em" height="1em" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 1h5l4 4v9a1 1 0 01-1 1H4a1 1 0 01-1-1V2a1 1 0 011-1z"/><path d="M9 1v4h4"/><line x1="5" y1="8" x2="11" y2="8"/><line x1="5" y1="11" x2="9" y2="11"/></svg></div>
+  <div>No topics file loaded</div>
+  <button class="topics-empty-btn" onclick="{~P~}.views['{~D:Record.ViewHash~}'].loadDefaultTopicsFile()">Load .pict_documentation_topics.json</button>
+  <button class="topics-empty-btn topics-empty-btn-secondary" onclick="{~P~}.views['{~D:Record.ViewHash~}'].promptSelectTopicsFile()">Select file...</button>
+</div>
+`
+		},
+		{
+			Hash: "Topics-EmptyList-Template",
+			Template: /*html*/`
+<div style="padding:16px;text-align:center;color:#8A7F72;font-size:0.78rem;">No topics yet. Click "+ Add Topic" to create one.</div>
+`
 		}
 	],
 
@@ -339,7 +400,7 @@ class ContentEditorTopicsView extends libPictView
 		this._editingTopicCode = null;
 	}
 
-	onAfterRender()
+	onAfterRender(pRenderable, pRenderDestinationAddress, pRecord, pContent)
 	{
 		this._hasRendered = true;
 		this.pict.CSSMap.injectCSS();
@@ -354,6 +415,8 @@ class ContentEditorTopicsView extends libPictView
 			this._updateHeaderTitle();
 			this.renderTopicList();
 		}
+
+		return super.onAfterRender(pRenderable, pRenderDestinationAddress, pRecord, pContent);
 	}
 
 	/**
@@ -554,7 +617,7 @@ class ContentEditorTopicsView extends libPictView
 		this.renderTopicList();
 
 		// Focus the first input field
-		let tmpInput = document.getElementById('topics-edit-code');
+		let tmpInput = this.pict.ContentAssignment.getElement('#topics-edit-code')[0];
 		if (tmpInput)
 		{
 			tmpInput.focus();
@@ -574,10 +637,10 @@ class ContentEditorTopicsView extends libPictView
 			return;
 		}
 
-		let tmpCodeInput = document.getElementById('topics-edit-code');
-		let tmpTitleInput = document.getElementById('topics-edit-title');
-		let tmpPathInput = document.getElementById('topics-edit-path');
-		let tmpLineInput = document.getElementById('topics-edit-line');
+		let tmpCodeInput = this.pict.ContentAssignment.getElement('#topics-edit-code')[0];
+		let tmpTitleInput = this.pict.ContentAssignment.getElement('#topics-edit-title')[0];
+		let tmpPathInput = this.pict.ContentAssignment.getElement('#topics-edit-path')[0];
+		let tmpLineInput = this.pict.ContentAssignment.getElement('#topics-edit-line')[0];
 
 		if (!tmpCodeInput)
 		{
@@ -709,7 +772,7 @@ class ContentEditorTopicsView extends libPictView
 	 */
 	renderTopicList()
 	{
-		let tmpListEl = document.getElementById('ContentEditor-Topics-List');
+		let tmpListEl = this.pict.ContentAssignment.getElement('#ContentEditor-Topics-List')[0];
 		if (!tmpListEl)
 		{
 			return;
@@ -719,109 +782,59 @@ class ContentEditorTopicsView extends libPictView
 
 		if (tmpKeys.length === 0)
 		{
-			tmpListEl.innerHTML = '<div style="padding:16px;text-align:center;color:#8A7F72;font-size:0.78rem;">No topics yet. Click "+ Add Topic" to create one.</div>';
+			this.pict.ContentAssignment.assignContent('#ContentEditor-Topics-List', this.pict.parseTemplateByHash('Topics-EmptyList-Template', {}));
 			return;
 		}
 
 		let tmpHTML = '';
+		let tmpViewRef = this.pict.PictApplication.pict_configuration.Pict + '.views[\'' + this.Hash + '\']';
 
 		for (let i = 0; i < tmpKeys.length; i++)
 		{
 			let tmpCode = tmpKeys[i];
 			let tmpTopic = this._topics[tmpCode];
 
+			let tmpEscapedCode = this._escapeHTML(tmpTopic.TopicCode || '');
+			let tmpAttrEscaped = this._escapeAttr(tmpTopic.TopicCode || '');
+			let tmpEscapedTitle = this._escapeHTML(tmpTopic.TopicTitle || '');
+			let tmpEscapedPath = this._escapeHTML(tmpTopic.TopicHelpFilePath || '');
+			let tmpLineNum = (typeof (tmpTopic.RelevantMarkdownLine) === 'number') ? tmpTopic.RelevantMarkdownLine : '';
+			let tmpLineStr = (typeof (tmpTopic.RelevantMarkdownLine) === 'number') ? ' :' + tmpTopic.RelevantMarkdownLine : '';
+			let tmpAttrEscapedPath = this._escapeAttr(tmpTopic.TopicHelpFilePath || '');
+			let tmpAttrEscapedOrigCode = this._escapeAttr(tmpTopic.TopicCode || '');
+
+			let tmpNavigateBtnHTML = '';
+			if (tmpTopic.TopicHelpFilePath)
+			{
+				tmpNavigateBtnHTML = '<button class="topics-row-btn" title="Go to file" onclick="event.stopPropagation();' + tmpViewRef + '.navigateToTopic(\'' + tmpAttrEscaped + '\')"><svg width="1em" height="1em" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="8" x2="13" y2="8"/><polyline points="9,4 13,8 9,12"/></svg></button>';
+			}
+
+			let tmpRecord =
+			{
+				ViewHash: this.Hash,
+				Code: tmpEscapedCode,
+				CodeEscaped: tmpAttrEscaped,
+				Title: tmpEscapedTitle,
+				PathDisplay: tmpEscapedPath + tmpLineStr,
+				Path: tmpAttrEscapedPath,
+				Line: tmpLineNum,
+				OriginalCode: tmpAttrEscapedOrigCode,
+				NavigateButton: tmpNavigateBtnHTML
+			};
+
 			if (this._editingTopicCode === tmpCode)
 			{
 				// Render inline edit form
-				tmpHTML += this._buildEditFormHTML(tmpTopic);
+				tmpHTML += this.pict.parseTemplateByHash('Topics-EditForm-Template', tmpRecord);
 			}
 			else
 			{
 				// Render topic row
-				tmpHTML += this._buildTopicRowHTML(tmpTopic);
+				tmpHTML += this.pict.parseTemplateByHash('Topics-Row-Template', tmpRecord);
 			}
 		}
 
-		tmpListEl.innerHTML = tmpHTML;
-	}
-
-	/**
-	 * Build the HTML for a topic row.
-	 *
-	 * @param {Object} pTopic - The topic object
-	 * @returns {string} HTML string
-	 */
-	_buildTopicRowHTML(pTopic)
-	{
-		let tmpCode = this._escapeHTML(pTopic.TopicCode || '');
-		let tmpTitle = this._escapeHTML(pTopic.TopicTitle || '');
-		let tmpPath = this._escapeHTML(pTopic.TopicHelpFilePath || '');
-		let tmpLine = (typeof (pTopic.RelevantMarkdownLine) === 'number') ? ' :' + pTopic.RelevantMarkdownLine : '';
-		let tmpCodeEscaped = this._escapeAttr(pTopic.TopicCode || '');
-
-		let tmpHTML = '<div class="topics-row" ondblclick="pict.views[\'ContentEditor-Topics\'].startEditTopic(\'' + tmpCodeEscaped + '\')">';
-		tmpHTML += '<div class="topics-row-info">';
-		tmpHTML += '<div class="topics-row-code">' + tmpCode + '</div>';
-		if (tmpTitle)
-		{
-			tmpHTML += '<div class="topics-row-title">' + tmpTitle + '</div>';
-		}
-		if (tmpPath)
-		{
-			tmpHTML += '<div class="topics-row-path">' + tmpPath + tmpLine + '</div>';
-		}
-		tmpHTML += '</div>';
-		tmpHTML += '<div class="topics-row-actions">';
-		tmpHTML += '<button class="topics-row-btn" title="Edit" onclick="event.stopPropagation();pict.views[\'ContentEditor-Topics\'].startEditTopic(\'' + tmpCodeEscaped + '\')">\u270E</button>';
-		tmpHTML += '<button class="topics-row-btn topics-row-btn-delete" title="Delete" onclick="event.stopPropagation();pict.views[\'ContentEditor-Topics\'].removeTopic(\'' + tmpCodeEscaped + '\')">\u2716</button>';
-		if (tmpPath)
-		{
-			tmpHTML += '<button class="topics-row-btn" title="Go to file" onclick="event.stopPropagation();pict.views[\'ContentEditor-Topics\'].navigateToTopic(\'' + tmpCodeEscaped + '\')">\u2192</button>';
-		}
-		tmpHTML += '</div>';
-		tmpHTML += '</div>';
-
-		return tmpHTML;
-	}
-
-	/**
-	 * Build the HTML for an inline edit form.
-	 *
-	 * @param {Object} pTopic - The topic object being edited
-	 * @returns {string} HTML string
-	 */
-	_buildEditFormHTML(pTopic)
-	{
-		let tmpCode = this._escapeAttr(pTopic.TopicCode || '');
-		let tmpTitle = this._escapeAttr(pTopic.TopicTitle || '');
-		let tmpPath = this._escapeAttr(pTopic.TopicHelpFilePath || '');
-		let tmpLine = (typeof (pTopic.RelevantMarkdownLine) === 'number') ? pTopic.RelevantMarkdownLine : '';
-		let tmpOriginalCode = this._escapeAttr(pTopic.TopicCode || '');
-
-		let tmpHTML = '<div class="topics-edit">';
-		tmpHTML += '<div class="topics-edit-field">';
-		tmpHTML += '<label class="topics-edit-label">Topic Code</label>';
-		tmpHTML += '<input class="topics-edit-input" id="topics-edit-code" type="text" value="' + tmpCode + '" placeholder="My-Topic-Code">';
-		tmpHTML += '</div>';
-		tmpHTML += '<div class="topics-edit-field">';
-		tmpHTML += '<label class="topics-edit-label">Title</label>';
-		tmpHTML += '<input class="topics-edit-input" id="topics-edit-title" type="text" value="' + tmpTitle + '" placeholder="Topic title">';
-		tmpHTML += '</div>';
-		tmpHTML += '<div class="topics-edit-field">';
-		tmpHTML += '<label class="topics-edit-label">Help File Path</label>';
-		tmpHTML += '<input class="topics-edit-input" id="topics-edit-path" type="text" value="' + tmpPath + '" placeholder="path/to/file.md">';
-		tmpHTML += '</div>';
-		tmpHTML += '<div class="topics-edit-field">';
-		tmpHTML += '<label class="topics-edit-label">Line Number (optional)</label>';
-		tmpHTML += '<input class="topics-edit-input" id="topics-edit-line" type="number" value="' + tmpLine + '" placeholder="e.g. 23" min="1">';
-		tmpHTML += '</div>';
-		tmpHTML += '<div class="topics-edit-actions">';
-		tmpHTML += '<button class="topics-edit-save" onclick="pict.views[\'ContentEditor-Topics\'].saveEditTopic(\'' + tmpOriginalCode + '\')">Save</button>';
-		tmpHTML += '<button class="topics-edit-cancel" onclick="pict.views[\'ContentEditor-Topics\'].cancelEditTopic()">Cancel</button>';
-		tmpHTML += '</div>';
-		tmpHTML += '</div>';
-
-		return tmpHTML;
+		this.pict.ContentAssignment.assignContent('#ContentEditor-Topics-List', tmpHTML);
 	}
 
 	/**
@@ -829,35 +842,19 @@ class ContentEditorTopicsView extends libPictView
 	 */
 	_showEmptyState()
 	{
-		let tmpContainer = document.getElementById('ContentEditor-Topics-Container');
+		let tmpContainer = this.pict.ContentAssignment.getElement('#ContentEditor-Topics-Container')[0];
 		if (!tmpContainer)
 		{
 			// If the container doesn't exist yet, just render the whole view
-			let tmpDestination = document.getElementById('ContentEditor-SidebarTopics-Container');
+			let tmpDestination = this.pict.ContentAssignment.getElement('#ContentEditor-SidebarTopics-Container')[0];
 			if (tmpDestination)
 			{
-				tmpDestination.innerHTML = this._buildEmptyStateHTML();
+				this.pict.ContentAssignment.assignContent('#ContentEditor-SidebarTopics-Container', this.pict.parseTemplateByHash('Topics-Empty-Template', { ViewHash: this.Hash }));
 			}
 			return;
 		}
 
-		tmpContainer.innerHTML = this._buildEmptyStateHTML();
-	}
-
-	/**
-	 * Build the empty state HTML.
-	 *
-	 * @returns {string} HTML string
-	 */
-	_buildEmptyStateHTML()
-	{
-		let tmpHTML = '<div class="topics-empty">';
-		tmpHTML += '<div class="topics-empty-icon">&#x1F4D1;</div>';
-		tmpHTML += '<div>No topics file loaded</div>';
-		tmpHTML += '<button class="topics-empty-btn" onclick="pict.views[\'ContentEditor-Topics\'].loadDefaultTopicsFile()">Load .pict_documentation_topics.json</button>';
-		tmpHTML += '<button class="topics-empty-btn topics-empty-btn-secondary" onclick="pict.views[\'ContentEditor-Topics\'].promptSelectTopicsFile()">Select file...</button>';
-		tmpHTML += '</div>';
-		return tmpHTML;
+		this.pict.ContentAssignment.assignContent('#ContentEditor-Topics-Container', this.pict.parseTemplateByHash('Topics-Empty-Template', { ViewHash: this.Hash }));
 	}
 
 	/**
@@ -944,7 +941,7 @@ class ContentEditorTopicsView extends libPictView
 	 */
 	_updateHeaderTitle()
 	{
-		let tmpTitle = document.getElementById('ContentEditor-Topics-HeaderTitle');
+		let tmpTitle = this.pict.ContentAssignment.getElement('#ContentEditor-Topics-HeaderTitle')[0];
 		if (tmpTitle)
 		{
 			let tmpFileName = this._topicsFilePath.replace(/^.*\//, '');
@@ -960,7 +957,7 @@ class ContentEditorTopicsView extends libPictView
 	 */
 	_showFooter(pShow)
 	{
-		let tmpFooter = document.getElementById('ContentEditor-Topics-Footer');
+		let tmpFooter = this.pict.ContentAssignment.getElement('#ContentEditor-Topics-Footer')[0];
 		if (tmpFooter)
 		{
 			tmpFooter.style.display = pShow ? '' : 'none';

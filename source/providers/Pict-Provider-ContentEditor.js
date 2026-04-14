@@ -29,7 +29,7 @@ class ContentEditorProvider extends libPictProvider
 			return tmpCallback('No file path specified', '');
 		}
 
-		fetch('/api/content/read/' + encodeURIComponent(pFilePath))
+		fetch('/api/content/read/' + pFilePath.split('/').map(encodeURIComponent).join('/'))
 			.then((pResponse) =>
 			{
 				if (!pResponse.ok)
@@ -69,7 +69,7 @@ class ContentEditorProvider extends libPictProvider
 			return tmpCallback('No file path specified');
 		}
 
-		fetch('/api/content/save/' + encodeURIComponent(pFilePath),
+		fetch('/api/content/save/' + pFilePath.split('/').map(encodeURIComponent).join('/'),
 			{
 				method: 'PUT',
 				headers: { 'Content-Type': 'application/json' },

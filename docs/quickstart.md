@@ -96,7 +96,7 @@ Click a file in the sidebar to open it. Edit, save with `Ctrl+S`, and watch the 
 
 ## 6. Upload an Image
 
-Inside the markdown editor, press `F3` or click the image button in the toolbar. Pick an image file; the server writes it to the folder that holds the current file being edited and inserts a `![alt](relative/path)` reference at the cursor.
+Inside the markdown editor, press `F3` or click the image button in the toolbar. Pick an image file; the server writes it to the folder that holds the current file being edited and inserts a `!\[alt](relative/path)` reference at the cursor.
 
 By default images are stored directly on disk next to the file. To store them in cloud storage instead, see [Persistence Hooks](persistence-hooks.md).
 

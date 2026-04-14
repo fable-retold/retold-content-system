@@ -208,7 +208,7 @@ sequenceDiagram
 	FS-->>API: ok
 	API-->>Provider: { Success, URL, RelativePath, Filename, Size }
 	Provider-->>MDE: url
-	MDE->>MDE: insert ![alt](url) at cursor
+	MDE->>MDE: insert image markdown at cursor
 ```
 
 ## REST Endpoints

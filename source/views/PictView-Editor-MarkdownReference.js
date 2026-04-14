@@ -472,8 +472,8 @@ const _ViewConfiguration =
 			Template: /*html*/`
 <div class="md-ref-container">
 	<div class="md-ref-docs-link">
-		<span>&#x1F4D6;</span>
-		<a href="/docs/" target="_blank">Full Documentation</a>
+		<span><svg width="1em" height="1em" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3C6.5 1.5 4 1 1 1.5v11c3-.5 5.5 0 7 1.5 1.5-1.5 4-2 7-1.5v-11c-3-.5-5.5 0-7 1.5z"/><line x1="8" y1="3" x2="8" y2="14"/></svg></span>
+		<a href="#" onclick="event.preventDefault();pict.views['ContentEditor-Layout'].toggleDocPanel()">Full Documentation</a>
 	</div>
 	<div class="md-ref-search-bar">
 		<input type="text" class="md-ref-search-input"
@@ -530,7 +530,7 @@ class ContentEditorMarkdownReferenceView extends libPictView
 		this._hasRendered = true;
 
 		// Cache the original innerHTML for search restoration
-		let tmpContentEl = document.getElementById('ContentEditor-MdRef-Content');
+		let tmpContentEl = this.pict.ContentAssignment.getElement('#ContentEditor-MdRef-Content')[0];
 		if (tmpContentEl)
 		{
 			this._originalContent = tmpContentEl.innerHTML;
@@ -656,7 +656,7 @@ class ContentEditorMarkdownReferenceView extends libPictView
 	 */
 	_performSearch(pQuery)
 	{
-		let tmpContentEl = document.getElementById('ContentEditor-MdRef-Content');
+		let tmpContentEl = this.pict.ContentAssignment.getElement('#ContentEditor-MdRef-Content')[0];
 		if (!tmpContentEl)
 		{
 			return;
@@ -768,7 +768,7 @@ class ContentEditorMarkdownReferenceView extends libPictView
 	 */
 	_updateSearchCount()
 	{
-		let tmpCountEl = document.getElementById('ContentEditor-MdRef-SearchCount');
+		let tmpCountEl = this.pict.ContentAssignment.getElement('#ContentEditor-MdRef-SearchCount')[0];
 		if (!tmpCountEl)
 		{
 			return;
@@ -776,7 +776,7 @@ class ContentEditorMarkdownReferenceView extends libPictView
 
 		if (this._searchMatches.length === 0)
 		{
-			let tmpInput = document.getElementById('ContentEditor-MdRef-SearchInput');
+			let tmpInput = this.pict.ContentAssignment.getElement('#ContentEditor-MdRef-SearchInput')[0];
 			if (tmpInput && tmpInput.value && tmpInput.value.length >= 2)
 			{
 				tmpCountEl.textContent = '0';
@@ -797,8 +797,8 @@ class ContentEditorMarkdownReferenceView extends libPictView
 	 */
 	_updateNavButtons()
 	{
-		let tmpPrev = document.getElementById('ContentEditor-MdRef-SearchPrev');
-		let tmpNext = document.getElementById('ContentEditor-MdRef-SearchNext');
+		let tmpPrev = this.pict.ContentAssignment.getElement('#ContentEditor-MdRef-SearchPrev')[0];
+		let tmpNext = this.pict.ContentAssignment.getElement('#ContentEditor-MdRef-SearchNext')[0];
 		let tmpHasMatches = this._searchMatches.length > 0;
 
 		if (tmpPrev) tmpPrev.disabled = !tmpHasMatches;
@@ -810,7 +810,7 @@ class ContentEditorMarkdownReferenceView extends libPictView
 	 */
 	_clearSearch()
 	{
-		let tmpContentEl = document.getElementById('ContentEditor-MdRef-Content');
+		let tmpContentEl = this.pict.ContentAssignment.getElement('#ContentEditor-MdRef-Content')[0];
 		if (tmpContentEl && this._originalContent)
 		{
 			tmpContentEl.innerHTML = this._originalContent;

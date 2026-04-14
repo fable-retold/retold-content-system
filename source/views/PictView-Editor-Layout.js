@@ -110,64 +110,19 @@ const _ViewConfiguration =
 		{
 			background: #FAF8F4;
 		}
-		/* Collapsed state */
-		.content-editor-sidebar-wrap.collapsed
+		/* Vocabulary panel: map the provider's CSS custom
+		   properties to the CMS light-theme palette so the
+		   shared vocabulary module renders consistently. */
+		#ContentEditor-Vocabulary-Container
 		{
-			width: 0 !important;
-		}
-		.content-editor-sidebar-wrap.collapsed .content-editor-sidebar-inner
-		{
-			visibility: hidden;
-		}
-		.content-editor-sidebar-wrap.collapsed .content-editor-resize-handle
-		{
-			display: none;
-		}
-		/* Collapse / expand toggle */
-		.content-editor-sidebar-toggle
-		{
-			position: absolute;
-			top: 8px;
-			right: -20px;
-			width: 20px;
-			height: 28px;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			background: #FAF8F4;
-			border: 1px solid #DDD6CA;
-			border-left: none;
-			border-radius: 0 4px 4px 0;
-			cursor: pointer;
-			z-index: 10;
-			color: #8A7F72;
-			font-size: 11px;
-			line-height: 1;
-			transition: color 0.15s;
-		}
-		.content-editor-sidebar-toggle:hover
-		{
-			color: #3D3229;
-		}
-		.content-editor-sidebar-wrap.collapsed .content-editor-sidebar-toggle
-		{
-			right: -20px;
-		}
-		/* Resize handle */
-		.content-editor-resize-handle
-		{
-			flex-shrink: 0;
-			width: 5px;
-			cursor: col-resize;
-			background: transparent;
-			border-right: 1px solid #DDD6CA;
-			transition: background 0.15s;
-		}
-		.content-editor-resize-handle:hover,
-		.content-editor-resize-handle.dragging
-		{
-			background: #2E7D74;
-			border-right-color: #2E7D74;
+			--bg-primary: #FAF8F4;
+			--bg-secondary: #F5F0EA;
+			--bg-hover: #EDE9E3;
+			--border-color: #DDD6CA;
+			--accent: #2E7D74;
+			--text-primary: #3D3229;
+			--text-secondary: #5E5549;
+			--text-muted: #8A7F72;
 		}
 		/* File browser layout overrides for sidebar use */
 		#ContentEditor-Sidebar-Container .pict-filebrowser
@@ -234,6 +189,37 @@ const _ViewConfiguration =
 			flex: 1;
 			overflow-y: auto;
 			padding: 44px 16px 16px 16px;
+		}
+		/* Right-side inline documentation panel */
+		.content-editor-doc-panel
+		{
+			width: 340px;
+			min-width: 260px;
+			max-width: 500px;
+			border-left: 1px solid #DDD6CA;
+			overflow-y: auto;
+			background: #FAF8F4;
+			flex-shrink: 0;
+		}
+		.content-editor-doc-toggle
+		{
+			position: absolute;
+			top: 6px;
+			right: 8px;
+			background: #F0EDE8;
+			border: 1px solid #DDD6CA;
+			border-radius: 4px;
+			padding: 3px 8px;
+			font-size: 0.72rem;
+			font-weight: 600;
+			color: #5E5549;
+			cursor: pointer;
+			z-index: 5;
+		}
+		.content-editor-doc-toggle:hover
+		{
+			background: #EAE3D8;
+			color: #2E7D74;
 		}
 		/* Code editor: fill the container and remove outer border */
 		#ContentEditor-Editor-Container .pict-code-editor-wrap
@@ -633,14 +619,23 @@ const _ViewConfiguration =
 				flex-direction: column;
 			}
 
-			/* Sidebar becomes a horizontal strip at the top */
-			.content-editor-sidebar-wrap
+			/* Both panels become full-width horizontal strips */
+			.content-editor-sidebar-wrap,
+			.content-editor-doc-panel
 			{
 				width: 100% !important;
 				max-height: 40vh;
 				flex-shrink: 0;
-				border-bottom: 1px solid #DDD6CA;
 				border-right: none;
+			}
+			.content-editor-sidebar-wrap
+			{
+				border-bottom: 1px solid #DDD6CA;
+			}
+			.content-editor-doc-panel
+			{
+				border-left: none;
+				border-top: 1px solid #DDD6CA;
 			}
 
 			/* Give the Reference and Topics tabs much more room on mobile
@@ -650,48 +645,17 @@ const _ViewConfiguration =
 				max-height: 70vh;
 			}
 
-			/* When collapsed on mobile, hide the inner content but keep the
-			   toggle button visible (it's positioned below the sidebar strip) */
-			.content-editor-sidebar-wrap.collapsed
+			/* When panels are collapsed on mobile, zero height instead of
+			   zero width since the layout is stacked vertically */
+			.content-editor-sidebar-wrap.pict-panel-collapsed,
+			.content-editor-doc-panel.pict-panel-collapsed
 			{
 				width: 100% !important;
 				max-height: 0;
-				overflow: visible;
 			}
-			.content-editor-sidebar-wrap.collapsed .content-editor-sidebar-inner
+			.content-editor-sidebar-wrap.pict-panel-collapsed .content-editor-sidebar-inner
 			{
 				display: none;
-			}
-
-			/* Hide the resize handle (desktop-only interaction) */
-			.content-editor-resize-handle
-			{
-				display: none;
-			}
-
-			/* Reposition the sidebar toggle for horizontal layout —
-			   place it at the bottom-center of the sidebar strip */
-			.content-editor-sidebar-toggle
-			{
-				position: absolute;
-				top: auto;
-				bottom: -20px;
-				right: auto;
-				left: 50%;
-				transform: translateX(-50%);
-				width: 28px;
-				height: 20px;
-				border-radius: 0 0 4px 4px;
-				border: 1px solid #DDD6CA;
-				border-top: none;
-				z-index: 10;
-			}
-			.content-editor-sidebar-wrap.collapsed .content-editor-sidebar-toggle
-			{
-				bottom: -20px;
-				right: auto;
-				left: 50%;
-				transform: translateX(-50%);
 			}
 
 			/* Reduce editor container padding (less gutters) */
@@ -750,7 +714,7 @@ const _ViewConfiguration =
 			Template: /*html*/`
 <div id="ContentEditor-TopBar-Container"></div>
 <div class="content-editor-body">
-	<div class="content-editor-sidebar-wrap" id="ContentEditor-SidebarWrap" style="width:250px">
+	<div class="content-editor-sidebar-wrap" id="ContentEditor-SidebarWrap">
 		<div class="content-editor-sidebar-inner">
 			<div class="content-editor-sidebar-tabs">
 				<button class="content-editor-sidebar-tab active" id="ContentEditor-SidebarTab-Files"
@@ -761,18 +725,17 @@ const _ViewConfiguration =
 					onclick="{~P~}.views['ContentEditor-Layout'].switchSidebarTab('topics')">Topics</button>
 				<button class="content-editor-sidebar-tab" id="ContentEditor-SidebarTab-Vocabulary"
 					onclick="{~P~}.views['ContentEditor-Layout'].switchSidebarTab('vocabulary')">Vocab</button>
-				<button class="content-editor-sidebar-addfile" title="New file"
-					onclick="{~P~}.PictApplication.promptNewFile()">+</button>
+				<button class="content-editor-sidebar-addfile" id="ContentEditor-SidebarAddBtn" title="New file"
+					onclick="{~P~}.views['ContentEditor-Layout'].onSidebarAddClick()">+</button>
 			</div>
 			<div id="ContentEditor-Sidebar-Container" class="content-editor-sidebar-pane"></div>
 			<div id="ContentEditor-SidebarReference-Container" class="content-editor-sidebar-pane" style="display:none"></div>
 			<div id="ContentEditor-SidebarTopics-Container" class="content-editor-sidebar-pane" style="display:none"></div>
 			<div id="ContentEditor-Vocabulary-Container" class="content-editor-sidebar-pane" style="display:none"></div>
 		</div>
-		<div class="content-editor-resize-handle" id="ContentEditor-ResizeHandle"></div>
-		<div class="content-editor-sidebar-toggle" id="ContentEditor-SidebarToggle">&#x25C0;</div>
 	</div>
 	<div id="ContentEditor-Editor-Container"></div>
+	<div id="ContentEditor-Documentation-Panel" class="content-editor-doc-panel"></div>
 </div>
 <div class="content-editor-upload-overlay" id="ContentEditor-UploadOverlay"
 	onclick="{~P~}.views['ContentEditor-Layout'].onUploadOverlayClick(event)">
@@ -784,8 +747,8 @@ const _ViewConfiguration =
 		</div>
 		<div class="content-editor-upload-body">
 			<div class="content-editor-upload-dropzone" id="ContentEditor-UploadDropzone"
-				onclick="document.getElementById('ContentEditor-UploadFileInput').click()">
-				<div class="content-editor-upload-dropzone-icon">&#x1F4F7;</div>
+				onclick="{~P~}.ContentAssignment.getElement('#ContentEditor-UploadFileInput')[0].click()">
+				<div class="content-editor-upload-dropzone-icon"><svg width="1em" height="1em" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5h2l1.5-2h5L12 5h2a1 1 0 011 1v6a1 1 0 01-1 1H2a1 1 0 01-1-1V6a1 1 0 011-1z"/><circle cx="8" cy="9" r="2.5"/></svg></div>
 				<div class="content-editor-upload-dropzone-text">Drop an image here or click to browse</div>
 				<div class="content-editor-upload-dropzone-hint">PNG, JPG, GIF, WebP, SVG, BMP</div>
 			</div>
@@ -835,49 +798,42 @@ class ContentEditorLayoutView extends libPictView
 		let tmpEditorContainer = this.pict.ContentAssignment.getElement('#ContentEditor-Editor-Container');
 		if (tmpEditorContainer && tmpEditorContainer[0] && !this.pict.AppData.ContentEditor.CurrentFile)
 		{
-			tmpEditorContainer[0].innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#8A7F72;font-size:1.1em;">Select a file from the sidebar to begin editing</div>';
+			this.pict.ContentAssignment.assignContent('#ContentEditor-Editor-Container', '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#8A7F72;font-size:1.1em;">Select a file from the sidebar to begin editing</div>');
 		}
 
 		// Inject CSS
 		this.pict.CSSMap.injectCSS();
 
-		// Apply persisted sidebar state
+		// Attach resizable/collapsible panel behavior to the
+		// left sidebar via pict-section-modal's panel system.
+		let tmpSelf = this;
 		let tmpSettings = this.pict.AppData.ContentEditor;
-		let tmpWrap = document.getElementById('ContentEditor-SidebarWrap');
-		let tmpToggle = document.getElementById('ContentEditor-SidebarToggle');
-		if (tmpWrap)
+		let tmpModal = this.pict.views['Pict-Section-Modal'];
+		if (tmpModal && typeof tmpModal.panel === 'function')
 		{
 			let tmpIsMobile = (window.innerWidth <= 768);
-
-			tmpWrap.style.width = tmpIsMobile ? '100%' : (tmpSettings.SidebarWidth + 'px');
-			if (tmpSettings.SidebarCollapsed)
-			{
-				tmpWrap.classList.add('collapsed');
-				if (tmpToggle) tmpToggle.innerHTML = tmpIsMobile ? '&#x25BC;' : '&#x25B6;';
-			}
-			else if (tmpIsMobile)
-			{
-				// Auto-collapse sidebar on narrow viewports.
-				// Sync the setting so toggleSidebar() works correctly,
-				// but don't persist — the desktop preference stays in localStorage.
-				tmpSettings.SidebarCollapsed = true;
-				tmpWrap.classList.add('collapsed');
-				if (tmpToggle) tmpToggle.innerHTML = '&#x25BC;';
-			}
+			this._sidebarPanel = tmpModal.panel('#ContentEditor-SidebarWrap',
+				{
+					position: 'left',
+					width: tmpSettings.SidebarWidth || 250,
+					minWidth: 140,
+					maxWidth: 600,
+					collapsible: true,
+					collapsed: tmpSettings.SidebarCollapsed || tmpIsMobile,
+					persist: true,
+					persistKey: 'ContentEditor-Sidebar',
+					onResize: (pWidth) =>
+					{
+						tmpSettings.SidebarWidth = pWidth;
+						tmpSelf.pict.PictApplication.saveSettings();
+					},
+					onToggle: (pCollapsed) =>
+					{
+						tmpSettings.SidebarCollapsed = pCollapsed;
+						tmpSelf.pict.PictApplication.saveSettings();
+					}
+				});
 		}
-
-		// Wire up sidebar toggle
-		let tmpSelf = this;
-		if (tmpToggle)
-		{
-			tmpToggle.addEventListener('click', () =>
-			{
-				tmpSelf.toggleSidebar();
-			});
-		}
-
-		// Wire up resize handle
-		this._wireResizeHandle();
 
 		// Listen for hash changes
 		window.addEventListener('hashchange', () =>
@@ -946,7 +902,7 @@ class ContentEditorLayoutView extends libPictView
 			if (pEvent.key === 'Escape')
 			{
 				// Don't close if the upload overlay is open (let it close that first)
-				let tmpUploadOverlay = document.getElementById('ContentEditor-UploadOverlay');
+				let tmpUploadOverlay = tmpSelf.pict.ContentAssignment.getElement('#ContentEditor-UploadOverlay')[0];
 				if (tmpUploadOverlay && tmpUploadOverlay.classList.contains('open'))
 				{
 					tmpSelf.closeUploadForm();
@@ -955,7 +911,7 @@ class ContentEditorLayoutView extends libPictView
 
 				// Don't interfere if the confirmation dialog is open
 				// (its own Y/N/Esc handler takes precedence)
-				let tmpConfirmOverlay = document.getElementById('ContentEditor-ConfirmOverlay');
+				let tmpConfirmOverlay = tmpSelf.pict.ContentAssignment.getElement('#ContentEditor-ConfirmOverlay')[0];
 				if (tmpConfirmOverlay && tmpConfirmOverlay.classList.contains('open'))
 				{
 					return;
@@ -975,36 +931,88 @@ class ContentEditorLayoutView extends libPictView
 	}
 
 	/**
+	 * Handle the sidebar "+" button click. Dispatches based on
+	 * which tab is currently active: Files → new file, Vocab → new term.
+	 */
+	onSidebarAddClick()
+	{
+		let tmpActiveTab = this.getActiveSidebarTab();
+		if (tmpActiveTab === 'vocabulary')
+		{
+			let tmpVocabView = this.pict.views['ContentEditor-Vocabulary'];
+			if (tmpVocabView && typeof tmpVocabView.createTerm === 'function')
+			{
+				tmpVocabView.createTerm();
+			}
+		}
+		else
+		{
+			// Default: create a new file
+			this.pict.PictApplication.promptNewFile();
+		}
+	}
+
+	/**
+	 * Toggle the right-side documentation panel.
+	 *
+	 * If the panel was attached via the pict-section-modal panel
+	 * system, delegate to the panel handle.  Otherwise fall back
+	 * to the legacy display toggle.
+	 */
+	toggleDocPanel()
+	{
+		// Use the panel handle if available (resize + collapse system)
+		if (this.pict.PictApplication._docPanel)
+		{
+			let tmpDocPanel = this.pict.PictApplication._docPanel;
+			tmpDocPanel.toggle();
+
+			// On first expand, trigger the inline docs provider to
+			// load a default document.
+			let tmpPanel = this.pict.ContentAssignment.getElement('#ContentEditor-Documentation-Panel')[0];
+			if (tmpPanel && !tmpPanel._initialized)
+			{
+				tmpPanel._initialized = true;
+				let tmpDocProvider = this.pict.providers && this.pict.providers['Pict-InlineDocumentation'];
+				if (tmpDocProvider && typeof tmpDocProvider.loadDocument === 'function')
+				{
+					tmpDocProvider.loadDocument('README.md');
+				}
+			}
+			return;
+		}
+
+		// Legacy fallback: simple display toggle
+		let tmpPanel = this.pict.ContentAssignment.getElement('#ContentEditor-Documentation-Panel')[0];
+		if (!tmpPanel) return;
+
+		let tmpVisible = tmpPanel.style.display !== 'none';
+		tmpPanel.style.display = tmpVisible ? 'none' : '';
+
+		if (!tmpVisible)
+		{
+			let tmpDocProvider = this.pict.providers && this.pict.providers['Pict-InlineDocumentation'];
+			if (tmpDocProvider && !tmpPanel._initialized)
+			{
+				tmpPanel._initialized = true;
+				if (typeof tmpDocProvider.loadDocument === 'function')
+				{
+					tmpDocProvider.loadDocument('README.md');
+				}
+			}
+		}
+	}
+
+	/**
 	 * Toggle the sidebar collapsed/expanded state.
 	 */
 	toggleSidebar()
 	{
-		let tmpWrap = document.getElementById('ContentEditor-SidebarWrap');
-		let tmpToggle = document.getElementById('ContentEditor-SidebarToggle');
-		if (!tmpWrap)
+		if (this._sidebarPanel)
 		{
+			this._sidebarPanel.toggle();
 			return;
 		}
-
-		let tmpSettings = this.pict.AppData.ContentEditor;
-		tmpSettings.SidebarCollapsed = !tmpSettings.SidebarCollapsed;
-
-		// Use vertical arrows on narrow viewports, horizontal on wide
-		let tmpIsMobile = (window.innerWidth <= 768);
-
-		if (tmpSettings.SidebarCollapsed)
-		{
-			tmpWrap.classList.add('collapsed');
-			if (tmpToggle) tmpToggle.innerHTML = tmpIsMobile ? '&#x25BC;' : '&#x25B6;';
-		}
-		else
-		{
-			tmpWrap.classList.remove('collapsed');
-			tmpWrap.style.width = tmpIsMobile ? '100%' : (tmpSettings.SidebarWidth + 'px');
-			if (tmpToggle) tmpToggle.innerHTML = tmpIsMobile ? '&#x25B2;' : '&#x25C0;';
-		}
-
-		this.pict.PictApplication.saveSettings();
 	}
 
 	/**
@@ -1016,18 +1024,18 @@ class ContentEditorLayoutView extends libPictView
 	{
 		let tmpPanes =
 		{
-			files: document.getElementById('ContentEditor-Sidebar-Container'),
-			reference: document.getElementById('ContentEditor-SidebarReference-Container'),
-			topics: document.getElementById('ContentEditor-SidebarTopics-Container'),
-			vocabulary: document.getElementById('ContentEditor-Vocabulary-Container')
+			files: this.pict.ContentAssignment.getElement('#ContentEditor-Sidebar-Container')[0],
+			reference: this.pict.ContentAssignment.getElement('#ContentEditor-SidebarReference-Container')[0],
+			topics: this.pict.ContentAssignment.getElement('#ContentEditor-SidebarTopics-Container')[0],
+			vocabulary: this.pict.ContentAssignment.getElement('#ContentEditor-Vocabulary-Container')[0]
 		};
 
 		let tmpTabs =
 		{
-			files: document.getElementById('ContentEditor-SidebarTab-Files'),
-			reference: document.getElementById('ContentEditor-SidebarTab-Reference'),
-			topics: document.getElementById('ContentEditor-SidebarTab-Topics'),
-			vocabulary: document.getElementById('ContentEditor-SidebarTab-Vocabulary')
+			files: this.pict.ContentAssignment.getElement('#ContentEditor-SidebarTab-Files')[0],
+			reference: this.pict.ContentAssignment.getElement('#ContentEditor-SidebarTab-Reference')[0],
+			topics: this.pict.ContentAssignment.getElement('#ContentEditor-SidebarTab-Topics')[0],
+			vocabulary: this.pict.ContentAssignment.getElement('#ContentEditor-SidebarTab-Vocabulary')[0]
 		};
 
 		// Hide all panes and deactivate all tabs
@@ -1042,7 +1050,7 @@ class ContentEditorLayoutView extends libPictView
 		if (tmpTabs[pTab]) tmpTabs[pTab].classList.add('active');
 
 		// On mobile, give the Reference and Topics tabs more vertical space
-		let tmpWrap = document.getElementById('ContentEditor-SidebarWrap');
+		let tmpWrap = this.pict.ContentAssignment.getElement('#ContentEditor-SidebarWrap')[0];
 		if (tmpWrap)
 		{
 			if (pTab === 'reference' || pTab === 'topics' || pTab === 'vocabulary')
@@ -1053,6 +1061,13 @@ class ContentEditorLayoutView extends libPictView
 			{
 				tmpWrap.classList.remove('sidebar-expanded-pane');
 			}
+		}
+
+		// Update the "+" button tooltip based on active tab
+		let tmpAddBtn = this.pict.ContentAssignment.getElement('#ContentEditor-SidebarAddBtn')[0];
+		if (tmpAddBtn)
+		{
+			tmpAddBtn.title = (pTab === 'vocabulary') ? 'New vocabulary term' : 'New file';
 		}
 
 		// Lazy-render the Reference view on first switch
@@ -1103,7 +1118,7 @@ class ContentEditorLayoutView extends libPictView
 		}
 
 		// Determine which tab is currently active
-		let tmpRefTab = document.getElementById('ContentEditor-SidebarTab-Reference');
+		let tmpRefTab = this.pict.ContentAssignment.getElement('#ContentEditor-SidebarTab-Reference')[0];
 		let tmpIsOnRef = tmpRefTab && tmpRefTab.classList.contains('active');
 
 		// Toggle: if on Reference, go to Files; otherwise go to Reference
@@ -1124,11 +1139,13 @@ class ContentEditorLayoutView extends libPictView
 	 */
 	getActiveSidebarTab()
 	{
-		let tmpRefTab = document.getElementById('ContentEditor-SidebarTab-Reference');
-		let tmpTopicsTab = document.getElementById('ContentEditor-SidebarTab-Topics');
+		let tmpRefTab = this.pict.ContentAssignment.getElement('#ContentEditor-SidebarTab-Reference')[0];
+		let tmpTopicsTab = this.pict.ContentAssignment.getElement('#ContentEditor-SidebarTab-Topics')[0];
+		let tmpVocabTab = this.pict.ContentAssignment.getElement('#ContentEditor-SidebarTab-Vocabulary')[0];
 
 		if (tmpRefTab && tmpRefTab.classList.contains('active')) return 'reference';
 		if (tmpTopicsTab && tmpTopicsTab.classList.contains('active')) return 'topics';
+		if (tmpVocabTab && tmpVocabTab.classList.contains('active')) return 'vocabulary';
 		return 'files';
 	}
 
@@ -1137,7 +1154,7 @@ class ContentEditorLayoutView extends libPictView
 	 */
 	toggleUploadForm()
 	{
-		let tmpOverlay = document.getElementById('ContentEditor-UploadOverlay');
+		let tmpOverlay = this.pict.ContentAssignment.getElement('#ContentEditor-UploadOverlay')[0];
 		if (!tmpOverlay)
 		{
 			return;
@@ -1158,7 +1175,7 @@ class ContentEditorLayoutView extends libPictView
 	 */
 	openUploadForm()
 	{
-		let tmpOverlay = document.getElementById('ContentEditor-UploadOverlay');
+		let tmpOverlay = this.pict.ContentAssignment.getElement('#ContentEditor-UploadOverlay')[0];
 		if (tmpOverlay)
 		{
 			tmpOverlay.classList.add('open');
@@ -1173,24 +1190,22 @@ class ContentEditorLayoutView extends libPictView
 	 */
 	closeUploadForm()
 	{
-		let tmpOverlay = document.getElementById('ContentEditor-UploadOverlay');
+		let tmpOverlay = this.pict.ContentAssignment.getElement('#ContentEditor-UploadOverlay')[0];
 		if (tmpOverlay)
 		{
 			tmpOverlay.classList.remove('open');
 		}
 
 		// Reset the file input so the same file can be re-selected
-		let tmpInput = document.getElementById('ContentEditor-UploadFileInput');
+		let tmpInput = this.pict.ContentAssignment.getElement('#ContentEditor-UploadFileInput')[0];
 		if (tmpInput)
 		{
 			tmpInput.value = '';
 		}
 
 		// Clear status and result
-		let tmpStatus = document.getElementById('ContentEditor-UploadStatus');
-		if (tmpStatus) tmpStatus.innerHTML = '';
-		let tmpResult = document.getElementById('ContentEditor-UploadResult');
-		if (tmpResult) tmpResult.innerHTML = '';
+		this.pict.ContentAssignment.assignContent('#ContentEditor-UploadStatus', '');
+		this.pict.ContentAssignment.assignContent('#ContentEditor-UploadResult', '');
 	}
 
 	/**
@@ -1224,7 +1239,7 @@ class ContentEditorLayoutView extends libPictView
 	 */
 	_wireUploadDropzone()
 	{
-		let tmpDropzone = document.getElementById('ContentEditor-UploadDropzone');
+		let tmpDropzone = this.pict.ContentAssignment.getElement('#ContentEditor-UploadDropzone')[0];
 		if (!tmpDropzone || tmpDropzone._wired)
 		{
 			return;
@@ -1267,9 +1282,6 @@ class ContentEditorLayoutView extends libPictView
 	 */
 	_uploadFile(pFile)
 	{
-		let tmpStatus = document.getElementById('ContentEditor-UploadStatus');
-		let tmpResult = document.getElementById('ContentEditor-UploadResult');
-
 		if (!pFile)
 		{
 			return;
@@ -1278,31 +1290,19 @@ class ContentEditorLayoutView extends libPictView
 		// Validate it's an image
 		if (!pFile.type.startsWith('image/'))
 		{
-			if (tmpStatus)
-			{
-				tmpStatus.innerHTML = '<span class="content-editor-upload-status-error">Only image files are supported.</span>';
-			}
+			this.pict.ContentAssignment.assignContent('#ContentEditor-UploadStatus', '<span class="content-editor-upload-status-error">Only image files are supported.</span>');
 			return;
 		}
 
-		if (tmpStatus)
-		{
-			tmpStatus.innerHTML = 'Uploading <strong>' + pFile.name + '</strong>...';
-		}
-		if (tmpResult)
-		{
-			tmpResult.innerHTML = '';
-		}
+		this.pict.ContentAssignment.assignContent('#ContentEditor-UploadStatus', 'Uploading <strong>' + pFile.name + '</strong>...');
+		this.pict.ContentAssignment.assignContent('#ContentEditor-UploadResult', '');
 
 		let tmpSelf = this;
 		let tmpProvider = this.pict.providers['ContentEditor-Provider'];
 
 		if (!tmpProvider)
 		{
-			if (tmpStatus)
-			{
-				tmpStatus.innerHTML = '<span class="content-editor-upload-status-error">Provider not available.</span>';
-			}
+			this.pict.ContentAssignment.assignContent('#ContentEditor-UploadStatus', '<span class="content-editor-upload-status-error">Provider not available.</span>');
 			return;
 		}
 
@@ -1310,133 +1310,35 @@ class ContentEditorLayoutView extends libPictView
 		{
 			if (pError)
 			{
-				if (tmpStatus)
-				{
-					tmpStatus.innerHTML = '<span class="content-editor-upload-status-error">Upload failed: ' + pError + '</span>';
-				}
+				tmpSelf.pict.ContentAssignment.assignContent('#ContentEditor-UploadStatus', '<span class="content-editor-upload-status-error">Upload failed: ' + pError + '</span>');
 				return;
 			}
 
-			if (tmpStatus)
-			{
-				tmpStatus.innerHTML = '<span class="content-editor-upload-status-success">Uploaded successfully!</span>';
-			}
+			tmpSelf.pict.ContentAssignment.assignContent('#ContentEditor-UploadStatus', '<span class="content-editor-upload-status-success">Uploaded successfully!</span>');
 
 			let tmpMarkdown = '![' + pFile.name + '](' + pURL + ')';
 
-			if (tmpResult)
-			{
-				tmpResult.innerHTML =
-					'<div class="content-editor-upload-result">' +
-					'<div class="content-editor-upload-result-label">Markdown</div>' +
-					'<div class="content-editor-upload-result-url">' +
-					'<span class="content-editor-upload-result-text">' + tmpMarkdown + '</span>' +
-					'<button class="content-editor-upload-result-copy" onclick="' +
-					"navigator.clipboard.writeText('" + tmpMarkdown.replace(/'/g, "\\'") + "').then(function(){this.textContent='Copied!'}.bind(this))" +
-					'">Copy</button>' +
-					'</div>' +
-					'<div class="content-editor-upload-result-label" style="margin-top:8px">URL</div>' +
-					'<div class="content-editor-upload-result-url">' +
-					'<span class="content-editor-upload-result-text">' + pURL + '</span>' +
-					'<button class="content-editor-upload-result-copy" onclick="' +
-					"navigator.clipboard.writeText('" + pURL.replace(/'/g, "\\'") + "').then(function(){this.textContent='Copied!'}.bind(this))" +
-					'">Copy</button>' +
-					'</div>' +
-					'</div>';
-			}
+			tmpSelf.pict.ContentAssignment.assignContent('#ContentEditor-UploadResult',
+				'<div class="content-editor-upload-result">' +
+				'<div class="content-editor-upload-result-label">Markdown</div>' +
+				'<div class="content-editor-upload-result-url">' +
+				'<span class="content-editor-upload-result-text">' + tmpMarkdown + '</span>' +
+				'<button class="content-editor-upload-result-copy" onclick="' +
+				"navigator.clipboard.writeText('" + tmpMarkdown.replace(/'/g, "\\'") + "').then(function(){this.textContent='Copied!'}.bind(this))" +
+				'">Copy</button>' +
+				'</div>' +
+				'<div class="content-editor-upload-result-label" style="margin-top:8px">URL</div>' +
+				'<div class="content-editor-upload-result-url">' +
+				'<span class="content-editor-upload-result-text">' + pURL + '</span>' +
+				'<button class="content-editor-upload-result-copy" onclick="' +
+				"navigator.clipboard.writeText('" + pURL.replace(/'/g, "\\'") + "').then(function(){this.textContent='Copied!'}.bind(this))" +
+				'">Copy</button>' +
+				'</div>' +
+				'</div>');
 
 			// Refresh the file list so the uploaded file shows
 			tmpSelf.pict.PictApplication.loadFileList();
 		});
-	}
-
-	/**
-	 * Wire up the drag-to-resize handle for the sidebar.
-	 */
-	_wireResizeHandle()
-	{
-		let tmpHandle = document.getElementById('ContentEditor-ResizeHandle');
-		let tmpWrap = document.getElementById('ContentEditor-SidebarWrap');
-		if (!tmpHandle || !tmpWrap)
-		{
-			return;
-		}
-
-		let tmpSelf = this;
-		let tmpDragging = false;
-		let tmpStartX = 0;
-		let tmpStartWidth = 0;
-
-		function onMouseDown(pEvent)
-		{
-			if (tmpSelf.pict.AppData.ContentEditor.SidebarCollapsed)
-			{
-				return;
-			}
-			pEvent.preventDefault();
-			tmpDragging = true;
-			tmpStartX = pEvent.clientX;
-			tmpStartWidth = tmpWrap.offsetWidth;
-			tmpHandle.classList.add('dragging');
-
-			// Disable transitions while dragging for snappy feel
-			tmpWrap.style.transition = 'none';
-
-			// Prevent text selection while dragging
-			document.body.style.userSelect = 'none';
-			document.body.style.cursor = 'col-resize';
-
-			document.addEventListener('mousemove', onMouseMove);
-			document.addEventListener('mouseup', onMouseUp);
-		}
-
-		function onMouseMove(pEvent)
-		{
-			if (!tmpDragging)
-			{
-				return;
-			}
-			let tmpDelta = pEvent.clientX - tmpStartX;
-			let tmpNewWidth = tmpStartWidth + tmpDelta;
-
-			// Clamp
-			if (tmpNewWidth < tmpSelf._minSidebarWidth)
-			{
-				tmpNewWidth = tmpSelf._minSidebarWidth;
-			}
-			if (tmpNewWidth > tmpSelf._maxSidebarWidth)
-			{
-				tmpNewWidth = tmpSelf._maxSidebarWidth;
-			}
-
-			tmpWrap.style.width = tmpNewWidth + 'px';
-		}
-
-		function onMouseUp()
-		{
-			if (!tmpDragging)
-			{
-				return;
-			}
-			tmpDragging = false;
-			tmpHandle.classList.remove('dragging');
-
-			// Restore transitions
-			tmpWrap.style.transition = '';
-
-			// Restore body
-			document.body.style.userSelect = '';
-			document.body.style.cursor = '';
-
-			// Persist the width to AppData and localStorage
-			tmpSelf.pict.AppData.ContentEditor.SidebarWidth = tmpWrap.offsetWidth;
-			tmpSelf.pict.PictApplication.saveSettings();
-
-			document.removeEventListener('mousemove', onMouseMove);
-			document.removeEventListener('mouseup', onMouseUp);
-		}
-
-		tmpHandle.addEventListener('mousedown', onMouseDown);
 	}
 }
 
