@@ -4214,11 +4214,11 @@ var CodeMirrorModules = (() => {
         }
         let moveX = 0, moveY = 0;
         if (y == "nearest") {
-          if (rect.top < bounding.top) {
+          if (rect.top < bounding.top + yMargin) {
             moveY = rect.top - (bounding.top + yMargin);
             if (side > 0 && rect.bottom > bounding.bottom + moveY)
               moveY = rect.bottom - bounding.bottom + yMargin;
-          } else if (rect.bottom > bounding.bottom) {
+          } else if (rect.bottom > bounding.bottom - yMargin) {
             moveY = rect.bottom - bounding.bottom + yMargin;
             if (side < 0 && rect.top - moveY < bounding.top)
               moveY = rect.top - (bounding.top + yMargin);
@@ -4229,11 +4229,11 @@ var CodeMirrorModules = (() => {
           moveY = targetTop - bounding.top;
         }
         if (x == "nearest") {
-          if (rect.left < bounding.left) {
+          if (rect.left < bounding.left + xMargin) {
             moveX = rect.left - (bounding.left + xMargin);
             if (side > 0 && rect.right > bounding.right + moveX)
               moveX = rect.right - bounding.right + xMargin;
-          } else if (rect.right > bounding.right) {
+          } else if (rect.right > bounding.right - xMargin) {
             moveX = rect.right - bounding.right + xMargin;
             if (side < 0 && rect.left < bounding.left + moveX)
               moveX = rect.left - (bounding.left + xMargin);
@@ -4841,7 +4841,7 @@ var CodeMirrorModules = (() => {
   });
   var scrollHandler = /* @__PURE__ */ Facet.define();
   var ScrollTarget = class _ScrollTarget {
-    constructor(range, y = "nearest", x = "nearest", yMargin = 5, xMargin = 5, isSnapshot = false) {
+    constructor(range, y, x, yMargin, xMargin, isSnapshot = false) {
       this.range = range;
       this.y = y;
       this.x = x;
@@ -7338,6 +7338,17 @@ var CodeMirrorModules = (() => {
         let side = above && (!below || this.y - above.bottom < below.top - this.y) ? above : below;
         this.y = (side.top + side.bottom) / 2;
         return this.scan(positions, getRects);
+      }
+      if (closestDx) {
+        let { top: top2, bottom } = closestRect;
+        if (above && above.bottom > (top2 + top2 + bottom) / 3) {
+          this.y = above.bottom - 1;
+          return this.scan(positions, getRects);
+        }
+        if (below && below.top < (top2 + bottom + bottom) / 3) {
+          this.y = below.top + 1;
+          return this.scan(positions, getRects);
+        }
       }
       let ltr = (bidi ? this.dirAt(positions[closestI], 1) : this.baseDir) == Direction.LTR;
       return {
@@ -9945,7 +9956,7 @@ var CodeMirrorModules = (() => {
       display: "block",
       whiteSpace: "pre",
       wordWrap: "normal",
-      // https://github.com/codemirror/dev/issues/456
+      // Issue #456
       boxSizing: "border-box",
       minHeight: "100%",
       padding: "4px 0",
@@ -11012,7 +11023,8 @@ var CodeMirrorModules = (() => {
             scrollTarget = scrollTarget.map(tr.changes);
           if (tr.scrollIntoView) {
             let { main } = tr.state.selection;
-            scrollTarget = new ScrollTarget(main.empty ? main : EditorSelection.cursor(main.head, main.head > main.anchor ? -1 : 1));
+            let { x, y } = this.state.facet(_EditorView.cursorScrollMargin);
+            scrollTarget = new ScrollTarget(main.empty ? main : EditorSelection.cursor(main.head, main.head > main.anchor ? -1 : 1), "nearest", "nearest", y, x);
           }
           for (let e of tr.effects)
             if (e.is(scrollIntoView))
@@ -11656,7 +11668,8 @@ var CodeMirrorModules = (() => {
     cause it to scroll the given position or range into view.
     */
     static scrollIntoView(pos, options = {}) {
-      return scrollIntoView.of(new ScrollTarget(typeof pos == "number" ? EditorSelection.cursor(pos) : pos, options.y, options.x, options.yMargin, options.xMargin));
+      var _a2, _b, _c, _d;
+      return scrollIntoView.of(new ScrollTarget(typeof pos == "number" ? EditorSelection.cursor(pos) : pos, (_a2 = options.y) !== null && _a2 !== void 0 ? _a2 : "nearest", (_b = options.x) !== null && _b !== void 0 ? _b : "nearest", (_c = options.yMargin) !== null && _c !== void 0 ? _c : 5, (_d = options.xMargin) !== null && _d !== void 0 ? _d : 5));
     }
     /**
     Return an effect that resets the editor to its current (at the
@@ -11722,7 +11735,7 @@ var CodeMirrorModules = (() => {
     }
     /**
     Create a theme extension. The first argument can be a
-    [`style-mod`](https://github.com/marijnh/style-mod#documentation)
+    [`style-mod`](https://code.haverbeke.berlin/marijn/style-mod#documentation)
     style spec providing the styles for the theme. These will be
     prefixed with a generated class for the style.
     
@@ -11784,6 +11797,18 @@ var CodeMirrorModules = (() => {
   EditorView.outerDecorations = outerDecorations;
   EditorView.atomicRanges = atomicRanges;
   EditorView.bidiIsolatedRanges = bidiIsolatedRanges;
+  EditorView.cursorScrollMargin = /* @__PURE__ */ Facet.define({
+    combine: (inputs) => {
+      let x = 5, y = 5;
+      for (let i of inputs) {
+        if (typeof i == "number")
+          x = y = i;
+        else
+          ({ x, y } = i);
+      }
+      return { x, y };
+    }
+  });
   EditorView.scrollMargins = scrollMargins;
   EditorView.darkTheme = darkTheme;
   EditorView.cspNonce = /* @__PURE__ */ Facet.define({ combine: (values2) => values2.length ? values2[0] : "" });
@@ -12229,7 +12254,7 @@ var CodeMirrorModules = (() => {
           old = next;
         }
         this.drawn = markers;
-        if (browser.safari && browser.safari_version >= 26)
+        if (browser.webkit)
           this.dom.style.display = this.dom.firstChild ? "" : "none";
       }
     }
