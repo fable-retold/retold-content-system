@@ -608,8 +608,12 @@ function _initializeBeacon(pFable, pContentPath, pBeaconConfig)
 		return;
 	}
 
-	pFable.serviceManager.addAndInstantiateServiceType('UltravisorBeacon', libBeaconService, pBeaconConfig);
-	let tmpBeacon = pFable.services.UltravisorBeacon;
+	// `addAndInstantiateServiceType(name, class)` in fable ignores trailing
+	// arguments, so pBeaconConfig would be silently dropped and the UV
+	// beacon would default its ServerURL to localhost:54321.  Use the
+	// two-step form that accepts options instead.
+	pFable.serviceManager.addServiceType('UltravisorBeacon', libBeaconService);
+	let tmpBeacon = pFable.serviceManager.instantiateServiceProvider('UltravisorBeacon', pBeaconConfig);
 
 	tmpBeacon.registerCapability({
 		Capability: 'ContentSystem',

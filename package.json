@@ -1,6 +1,6 @@
 {
 	"name": "retold-content-system",
-	"version": "1.0.17",
+	"version": "1.0.18",
 	"description": "Retold Content System - Markdown content viewer and editor",
 	"main": "source/Pict-ContentSystem-Bundle.js",
 	"bin": {
@@ -24,6 +24,62 @@
 		"build-all": "npm run build-codemirror && npm run build-codejar && npm run build",
 		"prepack": "npm run build-all",
 		"test": "echo \"Error: no test specified\" && exit 0"
+	},
+	"retoldBeacon": {
+		"displayName": "Retold Content System",
+		"description": "Markdown content viewer + editor server; serves a content folder over HTTP and registers as a beacon.",
+		"category": "content",
+		"mode": "standalone-service",
+		"bin": "source/cli/ContentSystem-CLI-Run.js",
+		"argTemplate": [
+			"serve",
+			{
+				"fromLabPath": "ContentPath"
+			},
+			"-p",
+			{
+				"fromLabPath": "Port"
+			},
+			"-b",
+			{
+				"fromLabPath": "UltravisorURL"
+			},
+			"--beacon-name",
+			{
+				"fromLabPath": "BeaconName"
+			}
+		],
+		"healthCheck": {
+			"path": "/"
+		},
+		"defaultPort": 7780,
+		"requiresUltravisor": true,
+		"configForm": {
+			"Fields": [
+				{
+					"Name": "HostContentPath",
+					"Label": "Host markdown folder to serve",
+					"Type": "text",
+					"Required": true,
+					"Help": "Absolute path on the host whose markdown contents will be served; bind-mounted read-only into the container at /app/content."
+				}
+			]
+		},
+		"docker": {
+			"image": "retold-content-system",
+			"dockerfile": "retold-content-system.Dockerfile",
+			"dataMountPath": "/app/data",
+			"configMountPath": "/app/data/config.json",
+			"contentMountPath": "/app/content",
+			"exposedPort": 7780,
+			"configMounts": [
+				{
+					"ConfigField": "HostContentPath",
+					"Target": "/app/content",
+					"ReadOnly": true
+				}
+			]
+		}
 	},
 	"author": "steven velozo <steven@velozo.com>",
 	"license": "MIT",
