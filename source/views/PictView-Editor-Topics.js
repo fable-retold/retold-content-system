@@ -16,7 +16,7 @@ const _ViewConfiguration =
 			flex-direction: column;
 			height: 100%;
 			font-size: 0.82rem;
-			color: #3D3229;
+			color: var(--theme-color-text-primary, #3D3229);
 		}
 		.topics-header
 		{
@@ -33,7 +33,7 @@ const _ViewConfiguration =
 			flex: 1;
 			font-weight: 600;
 			font-size: 0.78rem;
-			color: #5E5549;
+			color: var(--theme-color-text-secondary, #5E5549);
 			white-space: nowrap;
 			overflow: hidden;
 			text-overflow: ellipsis;
@@ -51,7 +51,7 @@ const _ViewConfiguration =
 		}
 		.topics-header-btn:hover
 		{
-			color: #3D3229;
+			color: var(--theme-color-text-primary, #3D3229);
 			background: #EDE9E3;
 		}
 		.topics-list
@@ -91,7 +91,7 @@ const _ViewConfiguration =
 		.topics-row-title
 		{
 			font-size: 0.72rem;
-			color: #5E5549;
+			color: var(--theme-color-text-secondary, #5E5549);
 			white-space: nowrap;
 			overflow: hidden;
 			text-overflow: ellipsis;
@@ -126,7 +126,7 @@ const _ViewConfiguration =
 		}
 		.topics-row-btn:hover
 		{
-			color: #3D3229;
+			color: var(--theme-color-text-primary, #3D3229);
 			background: #EDE9E3;
 		}
 		.topics-row-btn-delete:hover
@@ -162,8 +162,8 @@ const _ViewConfiguration =
 			font-size: 0.78rem;
 			border: 1px solid #DDD6CA;
 			border-radius: 3px;
-			background: #FFF;
-			color: #3D3229;
+			background: var(--theme-color-background-panel, #FFF);
+			color: var(--theme-color-text-primary, #3D3229);
 			font-family: inherit;
 		}
 		.topics-edit-input:focus
@@ -180,7 +180,7 @@ const _ViewConfiguration =
 		.topics-edit-save
 		{
 			background: #2E7D74;
-			color: #FFF;
+			color: var(--theme-color-background-panel, #FFF);
 			border: none;
 			border-radius: 3px;
 			padding: 4px 12px;
@@ -195,7 +195,7 @@ const _ViewConfiguration =
 		.topics-edit-cancel
 		{
 			background: transparent;
-			color: #5E5549;
+			color: var(--theme-color-text-secondary, #5E5549);
 			border: 1px solid #DDD6CA;
 			border-radius: 3px;
 			padding: 4px 12px;
@@ -221,7 +221,7 @@ const _ViewConfiguration =
 			width: 100%;
 			padding: 6px 0;
 			background: #2E7D74;
-			color: #FFF;
+			color: var(--theme-color-background-panel, #FFF);
 			border: none;
 			border-radius: 4px;
 			font-size: 0.78rem;
@@ -256,7 +256,7 @@ const _ViewConfiguration =
 			display: inline-block;
 			padding: 6px 14px;
 			background: #2E7D74;
-			color: #FFF;
+			color: var(--theme-color-background-panel, #FFF);
 			border: none;
 			border-radius: 4px;
 			font-size: 0.78rem;
@@ -270,7 +270,7 @@ const _ViewConfiguration =
 		.topics-empty-btn-secondary
 		{
 			background: transparent;
-			color: #5E5549;
+			color: var(--theme-color-text-secondary, #5E5549);
 			border: 1px solid #DDD6CA;
 		}
 		.topics-empty-btn-secondary:hover

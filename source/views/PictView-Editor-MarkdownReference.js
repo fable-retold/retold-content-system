@@ -306,8 +306,8 @@ const _ViewConfiguration =
 			border: 1px solid #DDD6CA;
 			border-radius: 4px;
 			font-size: 0.8rem;
-			background: #FFF;
-			color: #3D3229;
+			background: var(--theme-color-background-panel, #FFF);
+			color: var(--theme-color-text-primary, #3D3229);
 			outline: none;
 		}
 		.md-ref-search-input:focus
@@ -322,7 +322,7 @@ const _ViewConfiguration =
 			width: 26px;
 			height: 26px;
 			cursor: pointer;
-			color: #5E5549;
+			color: var(--theme-color-text-secondary, #5E5549);
 			font-size: 0.7rem;
 			display: flex;
 			align-items: center;
@@ -354,7 +354,7 @@ const _ViewConfiguration =
 			padding: 12px;
 			font-size: 0.82rem;
 			line-height: 1.6;
-			color: #3D3229;
+			color: var(--theme-color-text-primary, #3D3229);
 		}
 		.md-ref-content h2
 		{
@@ -372,7 +372,7 @@ const _ViewConfiguration =
 		{
 			font-size: 0.85rem;
 			margin: 14px 0 6px 0;
-			color: #5E5549;
+			color: var(--theme-color-text-secondary, #5E5549);
 		}
 		.md-ref-content p
 		{
@@ -426,7 +426,7 @@ const _ViewConfiguration =
 		.md-ref-copy-btn:hover
 		{
 			background: #EDE9E3;
-			color: #3D3229;
+			color: var(--theme-color-text-primary, #3D3229);
 		}
 		.md-ref-docs-link
 		{
@@ -461,7 +461,7 @@ const _ViewConfiguration =
 		mark.md-ref-highlight-active
 		{
 			background: #E8A94D;
-			color: #FFF;
+			color: var(--theme-color-background-panel, #FFF);
 		}
 	`,
 

@@ -14,7 +14,7 @@ const _ViewConfiguration =
 		{
 			display: flex;
 			align-items: center;
-			background: #3D3229;
+			background: var(--theme-color-text-primary, #3D3229);
 			color: #E8E0D4;
 			padding: 0;
 			height: 48px;
@@ -108,7 +108,7 @@ const _ViewConfiguration =
 		.content-editor-topbar-btn-save
 		{
 			background: #2E7D74;
-			color: #FFF;
+			color: var(--theme-color-background-panel, #FFF);
 		}
 		.content-editor-topbar-btn-save:hover
 		{
@@ -116,7 +116,7 @@ const _ViewConfiguration =
 		}
 		.content-editor-topbar-btn-save:disabled
 		{
-			background: #5E5549;
+			background: var(--theme-color-text-secondary, #5E5549);
 			color: #8A7F72;
 			cursor: not-allowed;
 		}
@@ -124,7 +124,7 @@ const _ViewConfiguration =
 		{
 			background: transparent;
 			color: #B8AFA4;
-			border: 1px solid #5E5549;
+			border: 1px solid var(--theme-color-text-secondary, #5E5549);
 		}
 		.content-editor-topbar-btn-close:hover
 		{
@@ -152,7 +152,7 @@ const _ViewConfiguration =
 		}
 		.content-editor-confirm-panel
 		{
-			background: #FFF;
+			background: var(--theme-color-background-panel, #FFF);
 			border: 1px solid #DDD6CA;
 			border-radius: 10px;
 			box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
@@ -175,13 +175,13 @@ const _ViewConfiguration =
 		{
 			font-size: 0.95rem;
 			font-weight: 600;
-			color: #3D3229;
+			color: var(--theme-color-text-primary, #3D3229);
 			margin-bottom: 6px;
 		}
 		.content-editor-confirm-message
 		{
 			font-size: 0.82rem;
-			color: #5E5549;
+			color: var(--theme-color-text-secondary, #5E5549);
 			margin-bottom: 16px;
 			line-height: 1.5;
 		}
@@ -203,7 +203,7 @@ const _ViewConfiguration =
 		.content-editor-confirm-btn-discard
 		{
 			background: #D9534F;
-			color: #FFF;
+			color: var(--theme-color-background-panel, #FFF);
 		}
 		.content-editor-confirm-btn-discard:hover
 		{
@@ -212,7 +212,7 @@ const _ViewConfiguration =
 		.content-editor-confirm-btn-cancel
 		{
 			background: transparent;
-			color: #5E5549;
+			color: var(--theme-color-text-secondary, #5E5549);
 			border: 1px solid #DDD6CA;
 		}
 		.content-editor-confirm-btn-cancel:hover
@@ -236,7 +236,7 @@ const _ViewConfiguration =
 			background: #F0EDE8;
 			border: 1px solid #DDD6CA;
 			border-radius: 3px;
-			color: #5E5549;
+			color: var(--theme-color-text-secondary, #5E5549);
 		}
 
 		/* ============================================

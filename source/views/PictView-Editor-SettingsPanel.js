@@ -62,7 +62,7 @@ const _ViewConfiguration =
 			top: 44px;
 			right: 0;
 			width: 270px;
-			background: #FFF;
+			background: var(--theme-color-background-panel, #FFF);
 			border: 1px solid #DDD6CA;
 			border-radius: 8px;
 			box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
@@ -87,7 +87,7 @@ const _ViewConfiguration =
 			right: 12px;
 			width: 12px;
 			height: 12px;
-			background: #FFF;
+			background: var(--theme-color-background-panel, #FFF);
 			border-left: 1px solid #DDD6CA;
 			border-top: 1px solid #DDD6CA;
 			transform: rotate(45deg);
@@ -104,7 +104,7 @@ const _ViewConfiguration =
 			padding: 10px 12px;
 			border-radius: 6px;
 			text-decoration: none;
-			color: #3D3229;
+			color: var(--theme-color-text-primary, #3D3229);
 			font-size: 0.85rem;
 			font-weight: 500;
 			transition: background 0.1s;
@@ -164,7 +164,7 @@ const _ViewConfiguration =
 		{
 			font: inherit;
 			font-size: 0.85rem;
-			color: #3D3229;
+			color: var(--theme-color-text-primary, #3D3229);
 			cursor: pointer;
 			user-select: none;
 		}
@@ -174,9 +174,9 @@ const _ViewConfiguration =
 			padding: 5px 8px;
 			border: 1px solid #DDD6CA;
 			border-radius: 4px;
-			background: #FFF;
+			background: var(--theme-color-background-panel, #FFF);
 			font-size: 0.82rem;
-			color: #3D3229;
+			color: var(--theme-color-text-primary, #3D3229);
 			cursor: pointer;
 		}
 		.content-editor-settings-select:disabled
@@ -187,7 +187,7 @@ const _ViewConfiguration =
 		.content-editor-settings-select-label
 		{
 			font-size: 0.82rem;
-			color: #5E5549;
+			color: var(--theme-color-text-secondary, #5E5549);
 			white-space: nowrap;
 		}
 

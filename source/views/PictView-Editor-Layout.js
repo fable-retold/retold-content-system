@@ -69,7 +69,7 @@ const _ViewConfiguration =
 		}
 		.content-editor-sidebar-tab:hover
 		{
-			color: #3D3229;
+			color: var(--theme-color-text-primary, #3D3229);
 		}
 		.content-editor-sidebar-tab.active
 		{
@@ -212,7 +212,7 @@ const _ViewConfiguration =
 			padding: 3px 8px;
 			font-size: 0.72rem;
 			font-weight: 600;
-			color: #5E5549;
+			color: var(--theme-color-text-secondary, #5E5549);
 			cursor: pointer;
 			z-index: 5;
 		}
@@ -232,7 +232,7 @@ const _ViewConfiguration =
 		{
 			min-height: unset;
 			height: 100%;
-			background: #FAFAFA;
+			background: var(--theme-color-background-secondary, #FAFAFA);
 		}
 		/* Binary file preview */
 		.binary-preview-image-wrap
@@ -242,7 +242,7 @@ const _ViewConfiguration =
 		.binary-preview-image
 		{
 			display: inline-block;
-			background: #FFF;
+			background: var(--theme-color-background-panel, #FFF);
 			border: 1px solid #DDD6CA;
 			border-radius: 6px;
 			padding: 24px;
@@ -260,7 +260,7 @@ const _ViewConfiguration =
 			display: flex;
 			align-items: center;
 			gap: 20px;
-			background: #FFF;
+			background: var(--theme-color-background-panel, #FFF);
 			border: 1px solid #DDD6CA;
 			border-radius: 6px;
 			padding: 24px;
@@ -278,7 +278,7 @@ const _ViewConfiguration =
 			border-radius: 8px;
 			font-size: 0.75rem;
 			font-weight: 700;
-			color: #5E5549;
+			color: var(--theme-color-text-secondary, #5E5549);
 			letter-spacing: 0.5px;
 		}
 		.binary-preview-info
@@ -290,7 +290,7 @@ const _ViewConfiguration =
 		{
 			font-size: 1rem;
 			font-weight: 600;
-			color: #3D3229;
+			color: var(--theme-color-text-primary, #3D3229);
 			margin-bottom: 6px;
 			word-break: break-all;
 		}
@@ -318,7 +318,7 @@ const _ViewConfiguration =
 			text-align: center;
 			cursor: pointer;
 			background: #2E7D74;
-			color: #FFF;
+			color: var(--theme-color-background-panel, #FFF);
 		}
 		.binary-preview-btn:hover
 		{
@@ -327,13 +327,13 @@ const _ViewConfiguration =
 		.binary-preview-btn-secondary
 		{
 			background: transparent;
-			color: #5E5549;
+			color: var(--theme-color-text-secondary, #5E5549);
 			border: 1px solid #DDD6CA;
 		}
 		.binary-preview-btn-secondary:hover
 		{
 			border-color: #8A7F72;
-			color: #3D3229;
+			color: var(--theme-color-text-primary, #3D3229);
 		}
 		.binary-preview-btn-preview
 		{
@@ -341,7 +341,7 @@ const _ViewConfiguration =
 			font-size: 0.85rem;
 			border: 1px solid #DDD6CA;
 			background: #FAF8F4;
-			color: #3D3229;
+			color: var(--theme-color-text-primary, #3D3229);
 			cursor: pointer;
 			border-radius: 6px;
 			transition: background 0.15s, border-color 0.15s;
@@ -366,7 +366,7 @@ const _ViewConfiguration =
 			max-height: 500px;
 			border-radius: 6px;
 			border: 1px solid #DDD6CA;
-			background: #000;
+			background: var(--theme-color-text-primary, #000);
 		}
 		.binary-preview-audio
 		{
@@ -394,7 +394,7 @@ const _ViewConfiguration =
 		}
 		.content-editor-upload-panel
 		{
-			background: #FFF;
+			background: var(--theme-color-background-panel, #FFF);
 			border: 1px solid #DDD6CA;
 			border-radius: 10px;
 			box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
@@ -414,7 +414,7 @@ const _ViewConfiguration =
 		{
 			font-size: 0.95rem;
 			font-weight: 600;
-			color: #3D3229;
+			color: var(--theme-color-text-primary, #3D3229);
 		}
 		.content-editor-upload-close
 		{
@@ -429,7 +429,7 @@ const _ViewConfiguration =
 		}
 		.content-editor-upload-close:hover
 		{
-			color: #3D3229;
+			color: var(--theme-color-text-primary, #3D3229);
 			background: #F0EDE8;
 		}
 		.content-editor-upload-body
@@ -461,7 +461,7 @@ const _ViewConfiguration =
 		.content-editor-upload-dropzone-text
 		{
 			font-size: 0.82rem;
-			color: #5E5549;
+			color: var(--theme-color-text-secondary, #5E5549);
 		}
 		.content-editor-upload-dropzone-hint
 		{
@@ -477,7 +477,7 @@ const _ViewConfiguration =
 		{
 			margin-top: 12px;
 			font-size: 0.82rem;
-			color: #5E5549;
+			color: var(--theme-color-text-secondary, #5E5549);
 			min-height: 20px;
 		}
 		.content-editor-upload-status-error
@@ -513,14 +513,14 @@ const _ViewConfiguration =
 			flex: 1;
 			font-family: monospace;
 			font-size: 0.78rem;
-			color: #3D3229;
+			color: var(--theme-color-text-primary, #3D3229);
 			word-break: break-all;
 		}
 		.content-editor-upload-result-copy
 		{
 			flex-shrink: 0;
 			background: #2E7D74;
-			color: #FFF;
+			color: var(--theme-color-background-panel, #FFF);
 			border: none;
 			border-radius: 4px;
 			padding: 4px 10px;
@@ -541,7 +541,7 @@ const _ViewConfiguration =
 			background: #F0EDE8;
 			border: 1px solid #DDD6CA;
 			border-radius: 3px;
-			color: #5E5549;
+			color: var(--theme-color-text-secondary, #5E5549);
 		}
 		.content-editor-upload-footer
 		{
@@ -562,7 +562,7 @@ const _ViewConfiguration =
 			top: 50%;
 			transform: translateY(-50%);
 			background: #2E7D74;
-			color: #FFF;
+			color: var(--theme-color-background-panel, #FFF);
 			border: none;
 			border-radius: 4px;
 			font-size: 0.78rem;
