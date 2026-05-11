@@ -16,7 +16,7 @@ const _ViewConfiguration =
 			flex-direction: column;
 			height: 100%;
 			font-size: 0.82rem;
-			color: var(--theme-color-text-primary, #3D3229);
+			color: var(--theme-color-text-primary, var(--theme-color-text-primary, #3D3229));
 		}
 		.topics-header
 		{
@@ -24,8 +24,8 @@ const _ViewConfiguration =
 			align-items: center;
 			gap: 6px;
 			padding: 8px 10px;
-			border-bottom: 1px solid #EDE9E3;
-			background: #FAF8F4;
+			border-bottom: 1px solid var(--theme-color-background-hover, #EDE9E3);
+			background: var(--theme-color-background-secondary, #FAF8F4);
 			flex-shrink: 0;
 		}
 		.topics-header-title
@@ -33,7 +33,7 @@ const _ViewConfiguration =
 			flex: 1;
 			font-weight: 600;
 			font-size: 0.78rem;
-			color: var(--theme-color-text-secondary, #5E5549);
+			color: var(--theme-color-text-secondary, var(--theme-color-text-secondary, #5E5549));
 			white-space: nowrap;
 			overflow: hidden;
 			text-overflow: ellipsis;
@@ -44,15 +44,15 @@ const _ViewConfiguration =
 			border: none;
 			cursor: pointer;
 			font-size: 0.82rem;
-			color: #8A7F72;
+			color: var(--theme-color-text-muted, #8A7F72);
 			padding: 2px 6px;
 			border-radius: 3px;
 			line-height: 1;
 		}
 		.topics-header-btn:hover
 		{
-			color: var(--theme-color-text-primary, #3D3229);
-			background: #EDE9E3;
+			color: var(--theme-color-text-primary, var(--theme-color-text-primary, #3D3229));
+			background: var(--theme-color-background-hover, #EDE9E3);
 		}
 		.topics-list
 		{
@@ -66,13 +66,13 @@ const _ViewConfiguration =
 			align-items: flex-start;
 			gap: 6px;
 			padding: 8px 10px;
-			border-bottom: 1px solid #F0EDE8;
+			border-bottom: 1px solid var(--theme-color-background-tertiary, #F0EDE8);
 			cursor: pointer;
 			transition: background 0.1s;
 		}
 		.topics-row:hover
 		{
-			background: #F5F0EA;
+			background: var(--theme-color-background-tertiary, #F5F0EA);
 		}
 		.topics-row-info
 		{
@@ -83,7 +83,7 @@ const _ViewConfiguration =
 		{
 			font-weight: 600;
 			font-size: 0.78rem;
-			color: #2E7D74;
+			color: var(--theme-color-brand-primary, #2E7D74);
 			white-space: nowrap;
 			overflow: hidden;
 			text-overflow: ellipsis;
@@ -91,7 +91,7 @@ const _ViewConfiguration =
 		.topics-row-title
 		{
 			font-size: 0.72rem;
-			color: var(--theme-color-text-secondary, #5E5549);
+			color: var(--theme-color-text-secondary, var(--theme-color-text-secondary, #5E5549));
 			white-space: nowrap;
 			overflow: hidden;
 			text-overflow: ellipsis;
@@ -100,7 +100,7 @@ const _ViewConfiguration =
 		.topics-row-path
 		{
 			font-size: 0.68rem;
-			color: #8A7F72;
+			color: var(--theme-color-text-muted, #8A7F72);
 			white-space: nowrap;
 			overflow: hidden;
 			text-overflow: ellipsis;
@@ -119,26 +119,26 @@ const _ViewConfiguration =
 			border: none;
 			cursor: pointer;
 			font-size: 0.72rem;
-			color: #8A7F72;
+			color: var(--theme-color-text-muted, #8A7F72);
 			padding: 2px 4px;
 			border-radius: 3px;
 			line-height: 1;
 		}
 		.topics-row-btn:hover
 		{
-			color: var(--theme-color-text-primary, #3D3229);
-			background: #EDE9E3;
+			color: var(--theme-color-text-primary, var(--theme-color-text-primary, #3D3229));
+			background: var(--theme-color-background-hover, #EDE9E3);
 		}
 		.topics-row-btn-delete:hover
 		{
-			color: #D9534F;
+			color: var(--theme-color-status-error, #D9534F);
 			background: #FDF0EF;
 		}
 		/* Inline edit form */
 		.topics-edit
 		{
 			padding: 8px 10px;
-			border-bottom: 1px solid #DDD6CA;
+			border-bottom: 1px solid var(--theme-color-border-default, #DDD6CA);
 			background: #FFF9F0;
 		}
 		.topics-edit-field
@@ -150,7 +150,7 @@ const _ViewConfiguration =
 			display: block;
 			font-size: 0.68rem;
 			font-weight: 600;
-			color: #8A7F72;
+			color: var(--theme-color-text-muted, #8A7F72);
 			margin-bottom: 2px;
 		}
 		.topics-edit-input
@@ -160,16 +160,16 @@ const _ViewConfiguration =
 			box-sizing: border-box;
 			padding: 4px 6px;
 			font-size: 0.78rem;
-			border: 1px solid #DDD6CA;
+			border: 1px solid var(--theme-color-border-default, #DDD6CA);
 			border-radius: 3px;
 			background: var(--theme-color-background-panel, #FFF);
-			color: var(--theme-color-text-primary, #3D3229);
+			color: var(--theme-color-text-primary, var(--theme-color-text-primary, #3D3229));
 			font-family: inherit;
 		}
 		.topics-edit-input:focus
 		{
 			outline: none;
-			border-color: #2E7D74;
+			border-color: var(--theme-color-brand-primary, #2E7D74);
 		}
 		.topics-edit-actions
 		{
@@ -179,7 +179,7 @@ const _ViewConfiguration =
 		}
 		.topics-edit-save
 		{
-			background: #2E7D74;
+			background: var(--theme-color-brand-primary, #2E7D74);
 			color: var(--theme-color-background-panel, #FFF);
 			border: none;
 			border-radius: 3px;
@@ -190,13 +190,13 @@ const _ViewConfiguration =
 		}
 		.topics-edit-save:hover
 		{
-			background: #3A9E92;
+			background: var(--theme-color-brand-primary-hover, #3A9E92);
 		}
 		.topics-edit-cancel
 		{
 			background: transparent;
-			color: var(--theme-color-text-secondary, #5E5549);
-			border: 1px solid #DDD6CA;
+			color: var(--theme-color-text-secondary, var(--theme-color-text-secondary, #5E5549));
+			border: 1px solid var(--theme-color-border-default, #DDD6CA);
 			border-radius: 3px;
 			padding: 4px 12px;
 			font-size: 0.72rem;
@@ -205,22 +205,22 @@ const _ViewConfiguration =
 		}
 		.topics-edit-cancel:hover
 		{
-			background: #F0EDE8;
+			background: var(--theme-color-background-tertiary, #F0EDE8);
 		}
 		/* Footer add button */
 		.topics-footer
 		{
 			flex-shrink: 0;
 			padding: 8px 10px;
-			border-top: 1px solid #EDE9E3;
-			background: #FAF8F4;
+			border-top: 1px solid var(--theme-color-background-hover, #EDE9E3);
+			background: var(--theme-color-background-secondary, #FAF8F4);
 		}
 		.topics-add-btn
 		{
 			display: block;
 			width: 100%;
 			padding: 6px 0;
-			background: #2E7D74;
+			background: var(--theme-color-brand-primary, #2E7D74);
 			color: var(--theme-color-background-panel, #FFF);
 			border: none;
 			border-radius: 4px;
@@ -231,7 +231,7 @@ const _ViewConfiguration =
 		}
 		.topics-add-btn:hover
 		{
-			background: #3A9E92;
+			background: var(--theme-color-brand-primary-hover, #3A9E92);
 		}
 		/* Empty state */
 		.topics-empty
@@ -243,7 +243,7 @@ const _ViewConfiguration =
 			gap: 12px;
 			padding: 32px 16px;
 			text-align: center;
-			color: #8A7F72;
+			color: var(--theme-color-text-muted, #8A7F72);
 			font-size: 0.82rem;
 		}
 		.topics-empty-icon
@@ -255,7 +255,7 @@ const _ViewConfiguration =
 		{
 			display: inline-block;
 			padding: 6px 14px;
-			background: #2E7D74;
+			background: var(--theme-color-brand-primary, #2E7D74);
 			color: var(--theme-color-background-panel, #FFF);
 			border: none;
 			border-radius: 4px;
@@ -265,18 +265,18 @@ const _ViewConfiguration =
 		}
 		.topics-empty-btn:hover
 		{
-			background: #3A9E92;
+			background: var(--theme-color-brand-primary-hover, #3A9E92);
 		}
 		.topics-empty-btn-secondary
 		{
 			background: transparent;
-			color: var(--theme-color-text-secondary, #5E5549);
-			border: 1px solid #DDD6CA;
+			color: var(--theme-color-text-secondary, var(--theme-color-text-secondary, #5E5549));
+			border: 1px solid var(--theme-color-border-default, #DDD6CA);
 		}
 		.topics-empty-btn-secondary:hover
 		{
-			background: #F0EDE8;
-			border-color: #8A7F72;
+			background: var(--theme-color-background-tertiary, #F0EDE8);
+			border-color: var(--theme-color-text-muted, #8A7F72);
 		}
 	`,
 
@@ -357,7 +357,7 @@ const _ViewConfiguration =
 		{
 			Hash: "Topics-EmptyList-Template",
 			Template: /*html*/`
-<div style="padding:16px;text-align:center;color:#8A7F72;font-size:0.78rem;">No topics yet. Click "+ Add Topic" to create one.</div>
+<div style="padding:16px;text-align:center;color:var(--theme-color-text-muted, #8A7F72);font-size:0.78rem;">No topics yet. Click "+ Add Topic" to create one.</div>
 `
 		}
 	],
@@ -655,14 +655,14 @@ class ContentEditorTopicsView extends libPictView
 		// Validate: TopicCode must not be empty
 		if (!tmpNewCode)
 		{
-			tmpCodeInput.style.borderColor = '#D9534F';
+			tmpCodeInput.style.borderColor = 'var(--theme-color-status-error, #D9534F)';
 			return;
 		}
 
 		// Validate: if code changed, it must be unique
 		if (tmpNewCode !== pOriginalCode && this._topics[tmpNewCode])
 		{
-			tmpCodeInput.style.borderColor = '#D9534F';
+			tmpCodeInput.style.borderColor = 'var(--theme-color-status-error, #D9534F)';
 			alert('A topic with code "' + tmpNewCode + '" already exists.');
 			return;
 		}

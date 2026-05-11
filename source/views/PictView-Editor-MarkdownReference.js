@@ -283,7 +283,7 @@ const _ViewConfiguration =
 			display: flex;
 			flex-direction: column;
 			height: 100%;
-			background: #FAF8F4;
+			background: var(--theme-color-background-secondary, #FAF8F4);
 		}
 		.md-ref-search-bar
 		{
@@ -294,8 +294,8 @@ const _ViewConfiguration =
 			align-items: center;
 			gap: 4px;
 			padding: 6px 8px;
-			background: #F5F0EA;
-			border-bottom: 1px solid #DDD6CA;
+			background: var(--theme-color-background-tertiary, #F5F0EA);
+			border-bottom: 1px solid var(--theme-color-border-default, #DDD6CA);
 			flex-shrink: 0;
 		}
 		.md-ref-search-input
@@ -303,26 +303,26 @@ const _ViewConfiguration =
 			flex: 1;
 			min-width: 0;
 			padding: 5px 8px;
-			border: 1px solid #DDD6CA;
+			border: 1px solid var(--theme-color-border-default, #DDD6CA);
 			border-radius: 4px;
 			font-size: 0.8rem;
 			background: var(--theme-color-background-panel, #FFF);
-			color: var(--theme-color-text-primary, #3D3229);
+			color: var(--theme-color-text-primary, var(--theme-color-text-primary, #3D3229));
 			outline: none;
 		}
 		.md-ref-search-input:focus
 		{
-			border-color: #2E7D74;
+			border-color: var(--theme-color-brand-primary, #2E7D74);
 		}
 		.md-ref-search-nav
 		{
 			background: transparent;
-			border: 1px solid #DDD6CA;
+			border: 1px solid var(--theme-color-border-default, #DDD6CA);
 			border-radius: 4px;
 			width: 26px;
 			height: 26px;
 			cursor: pointer;
-			color: var(--theme-color-text-secondary, #5E5549);
+			color: var(--theme-color-text-secondary, var(--theme-color-text-secondary, #5E5549));
 			font-size: 0.7rem;
 			display: flex;
 			align-items: center;
@@ -331,7 +331,7 @@ const _ViewConfiguration =
 		}
 		.md-ref-search-nav:hover
 		{
-			background: #EDE9E3;
+			background: var(--theme-color-background-hover, #EDE9E3);
 		}
 		.md-ref-search-nav:disabled
 		{
@@ -341,7 +341,7 @@ const _ViewConfiguration =
 		.md-ref-search-count
 		{
 			font-size: 0.7rem;
-			color: #8A7F72;
+			color: var(--theme-color-text-muted, #8A7F72);
 			white-space: nowrap;
 			min-width: 32px;
 			text-align: center;
@@ -354,15 +354,15 @@ const _ViewConfiguration =
 			padding: 12px;
 			font-size: 0.82rem;
 			line-height: 1.6;
-			color: var(--theme-color-text-primary, #3D3229);
+			color: var(--theme-color-text-primary, var(--theme-color-text-primary, #3D3229));
 		}
 		.md-ref-content h2
 		{
 			font-size: 0.95rem;
 			margin: 20px 0 8px 0;
 			padding-bottom: 4px;
-			border-bottom: 1px solid #EDE9E3;
-			color: #2E7D74;
+			border-bottom: 1px solid var(--theme-color-background-hover, #EDE9E3);
+			color: var(--theme-color-brand-primary, #2E7D74);
 		}
 		.md-ref-content h2:first-child
 		{
@@ -372,7 +372,7 @@ const _ViewConfiguration =
 		{
 			font-size: 0.85rem;
 			margin: 14px 0 6px 0;
-			color: var(--theme-color-text-secondary, #5E5549);
+			color: var(--theme-color-text-secondary, var(--theme-color-text-secondary, #5E5549));
 		}
 		.md-ref-content p
 		{
@@ -380,7 +380,7 @@ const _ViewConfiguration =
 		}
 		.md-ref-content code
 		{
-			background: #F0EDE8;
+			background: var(--theme-color-background-tertiary, #F0EDE8);
 			padding: 1px 4px;
 			border-radius: 3px;
 			font-size: 0.78rem;
@@ -388,8 +388,8 @@ const _ViewConfiguration =
 		}
 		.md-ref-content pre
 		{
-			background: #F0EDE8;
-			border: 1px solid #DDD6CA;
+			background: var(--theme-color-background-tertiary, #F0EDE8);
+			border: 1px solid var(--theme-color-border-default, #DDD6CA);
 			border-radius: 4px;
 			padding: 8px 10px;
 			overflow-x: auto;
@@ -409,12 +409,12 @@ const _ViewConfiguration =
 			position: absolute;
 			top: 4px;
 			right: 4px;
-			background: #FAF8F4;
-			border: 1px solid #DDD6CA;
+			background: var(--theme-color-background-secondary, #FAF8F4);
+			border: 1px solid var(--theme-color-border-default, #DDD6CA);
 			border-radius: 3px;
 			padding: 2px 6px;
 			font-size: 0.65rem;
-			color: #8A7F72;
+			color: var(--theme-color-text-muted, #8A7F72);
 			cursor: pointer;
 			opacity: 0;
 			transition: opacity 0.15s;
@@ -425,8 +425,8 @@ const _ViewConfiguration =
 		}
 		.md-ref-copy-btn:hover
 		{
-			background: #EDE9E3;
-			color: var(--theme-color-text-primary, #3D3229);
+			background: var(--theme-color-background-hover, #EDE9E3);
+			color: var(--theme-color-text-primary, var(--theme-color-text-primary, #3D3229));
 		}
 		.md-ref-docs-link
 		{
@@ -435,15 +435,15 @@ const _ViewConfiguration =
 			justify-content: center;
 			gap: 6px;
 			padding: 8px 10px;
-			background: #F0FAF8;
-			border-bottom: 1px solid #DDD6CA;
+			background: var(--theme-color-background-selected, #F0FAF8);
+			border-bottom: 1px solid var(--theme-color-border-default, #DDD6CA);
 			font-size: 0.8rem;
 			font-weight: 600;
 			flex-shrink: 0;
 		}
 		.md-ref-docs-link a
 		{
-			color: #2E7D74;
+			color: var(--theme-color-brand-primary, #2E7D74);
 			text-decoration: none;
 		}
 		.md-ref-docs-link a:hover
@@ -460,7 +460,7 @@ const _ViewConfiguration =
 		}
 		mark.md-ref-highlight-active
 		{
-			background: #E8A94D;
+			background: var(--theme-color-status-warning, #E8A94D);
 			color: var(--theme-color-background-panel, #FFF);
 		}
 	`,

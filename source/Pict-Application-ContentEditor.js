@@ -12,15 +12,24 @@ const libPictSectionInlineDocumentation = require('pict-section-inlinedocumentat
 // Modal system (panels, dialogs, tooltips, toasts)
 const libPictSectionModal = require('pict-section-modal');
 
+// Theme system (provider + picker / mode toggle / scale select / topbar
+// chrome with BrandMark + NavView / UserView slots).
+const libPictSectionTheme = require('pict-section-theme');
+
 // Content rendering
 const libPictSectionContent = require('pict-section-content');
 
 // Provider
 const libContentEditorProvider = require('./providers/Pict-Provider-ContentEditor.js');
 
+// Brand block (precomputed by `npm run brand` from Retold-Modules-Manifest.json)
+const libContentSystemBrand = require('./ContentSystem-Brand.js');
+
 // Views
 const libViewLayout = require('./views/PictView-Editor-Layout.js');
-const libViewTopBar = require('./views/PictView-Editor-TopBar.js');
+const libViewSidebarTabs = require('./views/PictView-Editor-Sidebar-Tabs.js');
+const libViewTopBarNav = require('./views/PictView-Editor-TopBar-Nav.js');
+const libViewTopBarUser = require('./views/PictView-Editor-TopBar-User.js');
 const libViewMarkdownEditor = require('./views/PictView-Editor-MarkdownEditor.js');
 const libViewCodeEditor = require('./views/PictView-Editor-CodeEditor.js');
 const libViewSettingsPanel = require('./views/PictView-Editor-SettingsPanel.js');
@@ -93,7 +102,41 @@ class ContentEditorApplication extends libPictApplication
 
 		// Register views
 		this.pict.addView('ContentEditor-Layout', libViewLayout.default_configuration, libViewLayout);
-		this.pict.addView('ContentEditor-TopBar', libViewTopBar.default_configuration, libViewTopBar);
+		this.pict.addView('ContentEditor-Sidebar-Tabs', libViewSidebarTabs.default_configuration, libViewSidebarTabs);
+		this.pict.addView('ContentEditor-TopBar-Nav',  libViewTopBarNav.default_configuration,  libViewTopBarNav);
+		this.pict.addView('ContentEditor-TopBar-User', libViewTopBarUser.default_configuration, libViewTopBarUser);
+
+		// Theme section provider — registers the pict-provider-theme
+		// runtime, the bundled catalog (including the new
+		// retold-content-system theme), and the Picker / ModeToggle /
+		// ScaleSelect / BrandMark / TopBar views. The TopBar mounts the
+		// two slot views above (ContentEditor-TopBar-Nav for the file
+		// label, ContentEditor-TopBar-User for the actions + gear).
+		//
+		// Default theme: retold-content-system (preserves the existing
+		// warm beige / teal palette). The picker still exposes every
+		// other bundled theme; users pick from the gear-opened settings
+		// panel (see PictView-Editor-SettingsPanel which mounts the
+		// theme controls via Theme-Section.mount()).
+		//
+		// 'Button' is intentionally omitted from Views — the gear in the
+		// User slot opens the settings panel which hosts the picker, so
+		// we don't need a separate top-bar Theme-Button popover.
+		this.pict.addProvider('Theme-Section',
+		{
+			ApplyDefault: 'retold-content-system',
+			DefaultMode:  'system',
+			DefaultScale: 1.0,
+			Brand:        libContentSystemBrand,
+			Views: ['Picker', 'ModeToggle', 'ScaleSelect', 'BrandMark', 'TopBar'],
+			ViewOptions:
+			{
+				// Height matches the Size: 48 on the topbar panel in the
+				// Layout view's addPanel call. Keep the two in sync.
+				TopBar: { NavView: 'ContentEditor-TopBar-Nav', UserView: 'ContentEditor-TopBar-User', Height: 48 }
+			}
+		}, libPictSectionTheme);
+
 		this.pict.addView('ContentEditor-MarkdownEditor', libViewMarkdownEditor.default_configuration, libViewMarkdownEditor);
 		this.pict.addView('ContentEditor-CodeEditor', libViewCodeEditor.default_configuration, libViewCodeEditor);
 		this.pict.addView('ContentEditor-SettingsPanel', libViewSettingsPanel.default_configuration, libViewSettingsPanel);
@@ -273,14 +316,12 @@ class ContentEditorApplication extends libPictApplication
 			tmpVocabProvider.loadFromURL('/api/vocabulary/index');
 		}
 
-		// Initialize the inline documentation panel. It reads from
-		// the content tree's /content/ path via the same server.
-		// The panel starts collapsed — the user expands it via the
-		// edge tab or the Docs button in the top bar.
-		// Initialize the inline documentation panel, then attach the
-		// resizable/collapsible panel behavior once the layout has
-		// rendered into the container. The panel() call must happen
-		// AFTER the async render so the edge element isn't wiped out.
+		// Initialize the inline documentation panel into the shell's
+		// right-side docpanel destination. The shell built that
+		// destination in Layout._buildShell(); we only need to wire
+		// the provider's container and restore the last-viewed doc.
+		// Panel resize/collapse chrome comes from the shell — no
+		// legacy `tmpModal.panel()` attachment needed.
 		let tmpDocProvider = this.pict.providers && this.pict.providers['Pict-InlineDocumentation'];
 		if (tmpDocProvider && typeof tmpDocProvider.initializeDocumentation === 'function')
 		{
@@ -296,29 +337,6 @@ class ContentEditorApplication extends libPictApplication
 				},
 				function ()
 				{
-					// Layout has rendered — attach resize + collapse.
-					// Full persistence: width and collapsed state both
-					// survive across page loads via localStorage.
-					let tmpModal = tmpSelfApp.pict.views['Pict-Section-Modal'];
-					if (tmpModal && typeof tmpModal.panel === 'function')
-					{
-						tmpSelfApp._docPanel = tmpModal.panel('#ContentEditor-Documentation-Panel',
-							{
-								position: 'right',
-								width: 340,
-								minWidth: 260,
-								maxWidth: 600,
-								collapsible: true,
-								collapsed: true,
-								persist: true,
-								persistKey: 'ContentEditor-DocPanel'
-							});
-					}
-
-					// Restore the last-viewed document from localStorage,
-					// or default to README.md. This ensures the panel
-					// shows the right content whether it starts collapsed
-					// or expanded from persisted state.
 					let tmpInlineDoc = tmpSelfApp.pict.providers['Pict-InlineDocumentation'];
 					if (tmpInlineDoc && typeof tmpInlineDoc.loadDocument === 'function')
 					{
@@ -873,7 +891,7 @@ class ContentEditorApplication extends libPictApplication
 		this._cleanupEditors();
 
 		// Re-render top bar
-		this.pict.views['ContentEditor-TopBar'].render();
+		this.renderTopBar();
 
 		// Binary files: show preview card without loading content
 		if (tmpEditorType === 'binary')
@@ -896,7 +914,7 @@ class ContentEditorApplication extends libPictApplication
 			{
 				tmpSelf.pict.AppData.ContentEditor.SaveStatus = 'Error loading file: ' + pError;
 				tmpSelf.pict.AppData.ContentEditor.SaveStatusClass = 'content-editor-status-error';
-				tmpSelf.pict.views['ContentEditor-TopBar'].render();
+				tmpSelf.renderTopBar();
 				return;
 			}
 
@@ -1018,7 +1036,7 @@ class ContentEditorApplication extends libPictApplication
 		this.pict.AppData.ContentEditor.IsSaving = true;
 		this.pict.AppData.ContentEditor.SaveStatus = 'Saving...';
 		this.pict.AppData.ContentEditor.SaveStatusClass = 'content-editor-status-saving';
-		this.pict.views['ContentEditor-TopBar'].render();
+		this.renderTopBar();
 
 		tmpProvider.saveFile(tmpFilePath, tmpContent, (pError) =>
 		{
@@ -1045,12 +1063,12 @@ class ContentEditorApplication extends libPictApplication
 					{
 						tmpSelf.pict.AppData.ContentEditor.SaveStatus = '';
 						tmpSelf.pict.AppData.ContentEditor.SaveStatusClass = '';
-						tmpSelf.pict.views['ContentEditor-TopBar'].render();
+						tmpSelf.renderTopBar();
 					}
 				}, 3000);
 			}
 
-			tmpSelf.pict.views['ContentEditor-TopBar'].render();
+			tmpSelf.renderTopBar();
 		});
 	}
 
@@ -1097,7 +1115,7 @@ class ContentEditorApplication extends libPictApplication
 		window.location.hash = '';
 
 		// Re-render top bar (hides save/close buttons)
-		this.pict.views['ContentEditor-TopBar'].render();
+		this.renderTopBar();
 
 		// Show the welcome message
 		let tmpEditorContainer = this.pict.ContentAssignment.getElement('#ContentEditor-Editor-Container');
@@ -1563,6 +1581,20 @@ class ContentEditorApplication extends libPictApplication
 	}
 
 	/**
+	 * Re-render the top bar — both Theme-TopBar slot views (Nav + User).
+	 * The chrome row itself (BrandMark + slot containers) is data-free
+	 * and managed by pict-section-theme; only the slot views need
+	 * refreshing when AppData.ContentEditor state changes.
+	 */
+	renderTopBar()
+	{
+		let tmpNav  = this.pict.views['ContentEditor-TopBar-Nav'];
+		let tmpUser = this.pict.views['ContentEditor-TopBar-User'];
+		if (tmpNav)  { tmpNav.render();  }
+		if (tmpUser) { tmpUser.render(); }
+	}
+
+	/**
 	 * Mark the document as dirty (unsaved changes).
 	 */
 	markDirty()
@@ -1570,7 +1602,7 @@ class ContentEditorApplication extends libPictApplication
 		if (!this.pict.AppData.ContentEditor.IsDirty)
 		{
 			this.pict.AppData.ContentEditor.IsDirty = true;
-			this.pict.views['ContentEditor-TopBar'].render();
+			this.renderTopBar();
 		}
 	}
 

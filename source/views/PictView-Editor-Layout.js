@@ -1,5 +1,34 @@
 const libPictView = require('pict-view');
 
+/**
+ * ContentEditor-Layout — application chrome.
+ *
+ * Built on pict-section-modal's shell() API. This view owns the shell
+ * and the upload-overlay; everything else (TopBar, Sidebar, Doc panel,
+ * Settings panel, editor center) lives in panels.
+ *
+ * Panel layout:
+ *
+ *   ┌──────────────────────────────────────────────────────────────┐
+ *   │ #Theme-TopBar  (top, fixed, 48px) — BrandMark + Nav + User   │
+ *   ├────────┬─────────────────────────────────┬───────────────────┤
+ *   │ #CES-  │ #ContentEditor-Editor-Container │ #CE-Doc-Panel     │
+ *   │ Side-  │ (center — the editor area)      │ (right, collapse) │
+ *   │ bar-   │                                 │                   │
+ *   │ Host   │                                 │                   │
+ *   │ (left, │                                 │                   │
+ *   │ resiz, │                                 │                   │
+ *   │ tabs)  │                                 │                   │
+ *   └────────┴─────────────────────────────────┴───────────────────┘
+ *
+ * Plus #CE-Settings-Panel — a Hidden panel that overlays from the
+ * right when the gear button in the user slot toggles it. No edge
+ * affordance: collapsed = display: none. Gear is the only way in.
+ *
+ * The upload overlay (image drag-drop) is rendered outside the shell
+ * (position: fixed) so it floats above everything.
+ */
+
 const _ViewConfiguration =
 {
 	ViewIdentifier: "ContentEditor-Layout",
@@ -10,395 +39,99 @@ const _ViewConfiguration =
 	AutoRender: false,
 
 	CSS: /*css*/`
+		/* height: 100% (not 100vh) so Theme-Scale's CSS zoom on <html>
+		   doesn't push panels off-screen — vh units render against the
+		   un-zoomed viewport. 100% cascades through html → body →
+		   container and stays in sync at any scale. */
 		#ContentEditor-Application-Container
 		{
-			display: flex;
-			flex-direction: column;
-			height: 100vh;
-			background: #F5F3EE;
-		}
-		#ContentEditor-TopBar-Container
-		{
-			flex-shrink: 0;
-		}
-		.content-editor-body
-		{
-			display: flex;
-			flex: 1;
+			height: 100%;
 			min-height: 0;
 			overflow: hidden;
 		}
-		/* Sidebar wrapper holds the sidebar content + collapse toggle */
-		.content-editor-sidebar-wrap
+		html, body { height: 100%; margin: 0; padding: 0; }
+		body
 		{
-			display: flex;
-			flex-shrink: 0;
-			position: relative;
-			transition: width 0.2s ease;
-		}
-		/* Inner wrapper: vertical flex for tab bar + panes */
-		.content-editor-sidebar-inner
-		{
-			display: flex;
-			flex-direction: column;
-			flex: 1;
-			min-width: 0;
-			min-height: 0;
-			overflow: hidden;
-		}
-		/* Sidebar tab bar */
-		.content-editor-sidebar-tabs
-		{
-			display: flex;
-			flex-shrink: 0;
-			border-bottom: 1px solid #DDD6CA;
-			background: #F5F0EA;
-		}
-		.content-editor-sidebar-tab
-		{
-			flex: 1;
-			padding: 7px 0;
-			border: none;
-			background: transparent;
-			font-size: 0.78rem;
-			font-weight: 600;
-			color: #8A7F72;
-			cursor: pointer;
-			border-bottom: 2px solid transparent;
-			transition: color 0.15s, border-color 0.15s;
-		}
-		.content-editor-sidebar-tab:hover
-		{
+			background: var(--theme-color-background-primary, #F5F3EE);
 			color: var(--theme-color-text-primary, #3D3229);
+			font-family: var(--theme-typography-family-sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif);
 		}
-		.content-editor-sidebar-tab.active
-		{
-			color: #2E7D74;
-			border-bottom-color: #2E7D74;
-		}
-		.content-editor-sidebar-addfile
-		{
-			flex-shrink: 0;
-			width: 30px;
-			border: none;
-			background: transparent;
-			font-size: 1.1rem;
-			font-weight: 400;
-			color: #8A7F72;
-			cursor: pointer;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			border-bottom: 2px solid transparent;
-			transition: color 0.15s, background 0.15s;
-		}
-		.content-editor-sidebar-addfile:hover
-		{
-			color: #2E7D74;
-			background: #EDE9E3;
-		}
-		/* Sidebar panes */
-		.content-editor-sidebar-pane
-		{
-			flex: 1;
-			overflow-y: auto;
-			overflow-x: hidden;
-			min-width: 0;
-			min-height: 0;
-		}
-		#ContentEditor-Sidebar-Container
-		{
-			background: #FAF8F4;
-		}
-		/* Vocabulary panel: map the provider's CSS custom
-		   properties to the CMS light-theme palette so the
-		   shared vocabulary module renders consistently. */
-		#ContentEditor-Vocabulary-Container
-		{
-			--bg-primary: #FAF8F4;
-			--bg-secondary: #F5F0EA;
-			--bg-hover: #EDE9E3;
-			--border-color: #DDD6CA;
-			--accent: #2E7D74;
-			--text-primary: #3D3229;
-			--text-secondary: #5E5549;
-			--text-muted: #8A7F72;
-		}
-		/* File browser layout overrides for sidebar use */
-		#ContentEditor-Sidebar-Container .pict-filebrowser
-		{
-			border: none;
-			border-radius: 0;
-			background: transparent;
-		}
-		#ContentEditor-Sidebar-Container .pict-filebrowser-browse-pane
-		{
-			display: none;
-		}
-		#ContentEditor-Sidebar-Container .pict-filebrowser-view-pane
-		{
-			display: none;
-		}
-		/* Hide size/date columns — the sidebar is too narrow for them */
-		#ContentEditor-Sidebar-Container .pict-fb-detail-col-size,
-		#ContentEditor-Sidebar-Container .pict-fb-detail-col-modified,
-		#ContentEditor-Sidebar-Container .pict-fb-detail-size,
-		#ContentEditor-Sidebar-Container .pict-fb-detail-modified
-		{
-			display: none;
-		}
-		/* Hide the column header bar in sidebar mode */
-		#ContentEditor-Sidebar-Container .pict-fb-detail-header
-		{
-			display: none;
-		}
-		/* Breadcrumb bar: flex wrapper with create-folder button */
-		.pict-fb-breadcrumb-bar
-		{
-			display: flex;
-			align-items: center;
-			background: #F5F0E8;
-			border-bottom: 1px solid #DDD6CA;
-		}
-		.pict-fb-breadcrumb-bar .pict-fb-breadcrumb
-		{
-			flex: 1;
-			border-bottom: none;
-		}
-		.pict-fb-breadcrumb-addfolder
-		{
-			flex-shrink: 0;
-			background: transparent;
-			border: none;
-			font-size: 1.1rem;
-			font-weight: 600;
-			color: #8A7F72;
-			cursor: pointer;
-			padding: 4px 10px;
-			line-height: 1;
-			border-radius: 4px;
-			margin-right: 4px;
-		}
-		.pict-fb-breadcrumb-addfolder:hover
-		{
-			color: #2E7D74;
-			background: #EAE3D8;
-		}
+
+		/* Shell-managed panels inherit themed surfaces from the active theme. */
+		.pict-modal-shell-host { height: 100%; }
+		.pict-modal-shell { background: var(--theme-color-background-primary, #F5F3EE); }
+		.pict-modal-shell-panel { background: var(--theme-color-background-panel, #FAF8F4); }
+		.pict-modal-shell-center { background: var(--theme-color-background-primary, #F5F3EE); }
+
+		/* Editor center — content area between left sidebar and right
+		   doc panel. Existing editor views (Markdown / Code) write into
+		   #ContentEditor-Editor-Container. */
 		#ContentEditor-Editor-Container
 		{
-			flex: 1;
-			overflow-y: auto;
-			padding: 44px 16px 16px 16px;
-		}
-		/* Right-side inline documentation panel */
-		.content-editor-doc-panel
-		{
-			width: 340px;
-			min-width: 260px;
-			max-width: 500px;
-			border-left: 1px solid #DDD6CA;
-			overflow-y: auto;
-			background: #FAF8F4;
-			flex-shrink: 0;
-		}
-		.content-editor-doc-toggle
-		{
-			position: absolute;
-			top: 6px;
-			right: 8px;
-			background: #F0EDE8;
-			border: 1px solid #DDD6CA;
-			border-radius: 4px;
-			padding: 3px 8px;
-			font-size: 0.72rem;
-			font-weight: 600;
-			color: var(--theme-color-text-secondary, #5E5549);
-			cursor: pointer;
-			z-index: 5;
-		}
-		.content-editor-doc-toggle:hover
-		{
-			background: #EAE3D8;
-			color: #2E7D74;
-		}
-		/* Code editor: fill the container and remove outer border */
-		#ContentEditor-Editor-Container .pict-code-editor-wrap
-		{
-			height: calc(100% - 4px);
-			border: none;
-			border-radius: 0;
-		}
-		#ContentEditor-Editor-Container .pict-code-editor
-		{
-			min-height: unset;
 			height: 100%;
-			background: var(--theme-color-background-secondary, #FAFAFA);
-		}
-		/* Binary file preview */
-		.binary-preview-image-wrap
-		{
-			margin-bottom: 20px;
-		}
-		.binary-preview-image
-		{
-			display: inline-block;
-			background: var(--theme-color-background-panel, #FFF);
-			border: 1px solid #DDD6CA;
-			border-radius: 6px;
-			padding: 24px;
-		}
-		.binary-preview-image img
-		{
-			display: block;
-			max-width: 100%;
-			max-height: 400px;
-			object-fit: contain;
-			border-radius: 4px;
-		}
-		.binary-preview-card
-		{
 			display: flex;
-			align-items: center;
-			gap: 20px;
-			background: var(--theme-color-background-panel, #FFF);
-			border: 1px solid #DDD6CA;
-			border-radius: 6px;
-			padding: 24px;
-			max-width: 600px;
+			flex-direction: column;
+			min-height: 0;
+			background: var(--theme-color-background-primary, #F5F3EE);
 		}
-		.binary-preview-icon
+		.content-editor-empty
 		{
-			flex-shrink: 0;
-			width: 64px;
-			height: 64px;
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			background: #F0EDE8;
-			border-radius: 8px;
-			font-size: 0.75rem;
-			font-weight: 700;
-			color: var(--theme-color-text-secondary, #5E5549);
-			letter-spacing: 0.5px;
+			height: 100%;
+			color: var(--theme-color-text-muted, #8A7F72);
+			font-size: 1.1em;
+			font-style: italic;
 		}
-		.binary-preview-info
+
+		/* Doc panel destination — InlineDocumentation provider writes here. */
+		#ContentEditor-Documentation-Panel
 		{
-			flex: 1;
-			min-width: 0;
-		}
-		.binary-preview-name
-		{
-			font-size: 1rem;
-			font-weight: 600;
-			color: var(--theme-color-text-primary, #3D3229);
-			margin-bottom: 6px;
-			word-break: break-all;
-		}
-		.binary-preview-meta
-		{
-			font-size: 0.8rem;
-			color: #8A7F72;
-			line-height: 1.6;
-		}
-		.binary-preview-actions
-		{
-			flex-shrink: 0;
-			display: flex;
-			flex-direction: column;
-			gap: 8px;
-		}
-		.binary-preview-btn
-		{
-			display: inline-block;
-			padding: 8px 16px;
-			border-radius: 4px;
-			font-size: 0.8rem;
-			font-weight: 600;
-			text-decoration: none;
-			text-align: center;
-			cursor: pointer;
-			background: #2E7D74;
-			color: var(--theme-color-background-panel, #FFF);
-		}
-		.binary-preview-btn:hover
-		{
-			background: #3A9E92;
-		}
-		.binary-preview-btn-secondary
-		{
-			background: transparent;
-			color: var(--theme-color-text-secondary, #5E5549);
-			border: 1px solid #DDD6CA;
-		}
-		.binary-preview-btn-secondary:hover
-		{
-			border-color: #8A7F72;
+			height: 100%;
+			min-height: 0;
+			overflow-y: auto;
+			background: var(--theme-color-background-panel, #FAF8F4);
 			color: var(--theme-color-text-primary, #3D3229);
 		}
-		.binary-preview-btn-preview
+
+		/* Settings panel destination */
+		#ContentEditor-Settings-Panel
 		{
-			padding: 10px 20px;
-			font-size: 0.85rem;
-			border: 1px solid #DDD6CA;
-			background: #FAF8F4;
+			height: 100%;
+			min-height: 0;
+			overflow-y: auto;
+			background: var(--theme-color-background-panel, #FAF8F4);
 			color: var(--theme-color-text-primary, #3D3229);
-			cursor: pointer;
-			border-radius: 6px;
-			transition: background 0.15s, border-color 0.15s;
+			border-left: 1px solid var(--theme-color-border-default, #DDD6CA);
 		}
-		.binary-preview-btn-preview:hover
-		{
-			background: #F0EDE8;
-			border-color: #8A7F72;
-		}
-		#ContentEditor-MediaPreviewPlaceholder
-		{
-			margin-bottom: 20px;
-		}
-		.binary-preview-media-wrap
-		{
-			margin-bottom: 20px;
-		}
-		.binary-preview-video
-		{
-			display: block;
-			max-width: 100%;
-			max-height: 500px;
-			border-radius: 6px;
-			border: 1px solid #DDD6CA;
-			background: var(--theme-color-text-primary, #000);
-		}
-		.binary-preview-audio
-		{
-			display: block;
-			width: 100%;
-			max-width: 500px;
-		}
-		/* Image upload overlay */
+
+		/* ============================================
+		   Image upload overlay (F3 / Ctrl-Shift-U)
+		   Lives outside the shell so it floats above everything.
+		   ============================================ */
 		.content-editor-upload-overlay
 		{
 			display: none;
 			position: fixed;
-			top: 0;
-			left: 0;
-			right: 0;
-			bottom: 0;
-			z-index: 1099;
+			top: 0; left: 0; right: 0; bottom: 0;
+			z-index: 1100;
 			background: rgba(0, 0, 0, 0.35);
+			align-items: center;
+			justify-content: center;
 		}
 		.content-editor-upload-overlay.open
 		{
 			display: flex;
-			align-items: center;
-			justify-content: center;
 		}
 		.content-editor-upload-panel
 		{
 			background: var(--theme-color-background-panel, #FFF);
-			border: 1px solid #DDD6CA;
+			color: var(--theme-color-text-primary, #3D3229);
+			border: 1px solid var(--theme-color-border-default, #DDD6CA);
 			border-radius: 10px;
 			box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
-			width: 420px;
+			width: 480px;
 			max-width: 90vw;
 			overflow: hidden;
 		}
@@ -407,66 +140,61 @@ const _ViewConfiguration =
 			display: flex;
 			align-items: center;
 			justify-content: space-between;
-			padding: 14px 18px;
-			border-bottom: 1px solid #EDE9E3;
+			padding: 14px 20px;
+			border-bottom: 1px solid var(--theme-color-border-light, #EDE9E3);
 		}
 		.content-editor-upload-title
 		{
 			font-size: 0.95rem;
 			font-weight: 600;
-			color: var(--theme-color-text-primary, #3D3229);
 		}
 		.content-editor-upload-close
 		{
-			background: transparent;
 			border: none;
-			font-size: 1.2rem;
-			color: #8A7F72;
+			background: transparent;
+			font-size: 1.4rem;
 			cursor: pointer;
-			padding: 2px 6px;
-			line-height: 1;
-			border-radius: 4px;
+			color: var(--theme-color-text-muted, #8A7F72);
+			padding: 0 4px;
 		}
 		.content-editor-upload-close:hover
 		{
 			color: var(--theme-color-text-primary, #3D3229);
-			background: #F0EDE8;
 		}
 		.content-editor-upload-body
 		{
-			padding: 18px;
+			padding: 18px 20px;
 		}
 		.content-editor-upload-dropzone
 		{
-			border: 2px dashed #DDD6CA;
+			border: 2px dashed var(--theme-color-border-default, #DDD6CA);
 			border-radius: 8px;
 			padding: 28px 16px;
 			text-align: center;
 			cursor: pointer;
-			transition: border-color 0.15s, background 0.15s;
-			background: #FAF8F4;
+			transition: background 120ms ease, border-color 120ms ease;
 		}
 		.content-editor-upload-dropzone:hover,
 		.content-editor-upload-dropzone.dragover
 		{
-			border-color: #2E7D74;
-			background: #F0FAF8;
+			border-color: var(--theme-color-brand-primary, #2E7D74);
+			background: var(--theme-color-background-hover, #F0EDE8);
 		}
 		.content-editor-upload-dropzone-icon
 		{
 			font-size: 2rem;
-			color: #8A7F72;
-			margin-bottom: 6px;
+			color: var(--theme-color-text-muted, #8A7F72);
+			margin-bottom: 8px;
 		}
 		.content-editor-upload-dropzone-text
 		{
-			font-size: 0.82rem;
+			font-size: 0.92rem;
 			color: var(--theme-color-text-secondary, #5E5549);
 		}
 		.content-editor-upload-dropzone-hint
 		{
-			font-size: 0.72rem;
-			color: #8A7F72;
+			font-size: 0.78rem;
+			color: var(--theme-color-text-muted, #8A7F72);
 			margin-top: 4px;
 		}
 		.content-editor-upload-file-input
@@ -476,234 +204,81 @@ const _ViewConfiguration =
 		.content-editor-upload-status
 		{
 			margin-top: 12px;
-			font-size: 0.82rem;
-			color: var(--theme-color-text-secondary, #5E5549);
-			min-height: 20px;
-		}
-		.content-editor-upload-status-error
-		{
-			color: #D9534F;
+			font-size: 0.85rem;
 		}
 		.content-editor-upload-status-success
 		{
-			color: #2E7D74;
+			color: var(--theme-color-status-success, #7BC47F);
+			font-weight: 600;
+		}
+		.content-editor-upload-status-error
+		{
+			color: var(--theme-color-status-error, #D9534F);
+			font-weight: 600;
 		}
 		.content-editor-upload-result
 		{
 			margin-top: 12px;
-			padding: 10px 12px;
-			background: #F0EDE8;
-			border: 1px solid #DDD6CA;
+			padding: 12px;
+			background: var(--theme-color-background-tertiary, #F0EDE8);
 			border-radius: 6px;
 		}
 		.content-editor-upload-result-label
 		{
 			font-size: 0.72rem;
-			color: #8A7F72;
+			text-transform: uppercase;
+			letter-spacing: 0.5px;
+			color: var(--theme-color-text-muted, #8A7F72);
 			margin-bottom: 4px;
 		}
 		.content-editor-upload-result-url
 		{
 			display: flex;
 			align-items: center;
-			gap: 6px;
+			gap: 8px;
 		}
 		.content-editor-upload-result-text
 		{
 			flex: 1;
-			font-family: monospace;
+			font-family: var(--theme-typography-family-mono, monospace);
 			font-size: 0.78rem;
-			color: var(--theme-color-text-primary, #3D3229);
-			word-break: break-all;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
 		}
 		.content-editor-upload-result-copy
 		{
-			flex-shrink: 0;
-			background: #2E7D74;
-			color: var(--theme-color-background-panel, #FFF);
+			background: var(--theme-color-brand-primary, #2E7D74);
+			color: var(--theme-color-text-on-brand, #FFF);
 			border: none;
 			border-radius: 4px;
 			padding: 4px 10px;
-			font-size: 0.72rem;
+			font-size: 0.75rem;
 			font-weight: 600;
 			cursor: pointer;
 		}
 		.content-editor-upload-result-copy:hover
 		{
-			background: #3A9E92;
+			background: var(--theme-color-brand-primary-hover, #3A9E92);
+		}
+		.content-editor-upload-footer
+		{
+			padding: 10px 20px;
+			border-top: 1px solid var(--theme-color-border-light, #EDE9E3);
+			font-size: 0.72rem;
+			color: var(--theme-color-text-muted, #8A7F72);
+			text-align: center;
 		}
 		.content-editor-upload-kbd
 		{
 			display: inline-block;
 			padding: 1px 5px;
 			font-size: 0.68rem;
-			font-family: monospace;
-			background: #F0EDE8;
-			border: 1px solid #DDD6CA;
+			font-family: var(--theme-typography-family-mono, monospace);
+			background: var(--theme-color-background-tertiary, #F0EDE8);
+			border: 1px solid var(--theme-color-border-default, #DDD6CA);
 			border-radius: 3px;
 			color: var(--theme-color-text-secondary, #5E5549);
-		}
-		.content-editor-upload-footer
-		{
-			padding: 10px 18px;
-			border-top: 1px solid #EDE9E3;
-			font-size: 0.72rem;
-			color: #8A7F72;
-			text-align: center;
-		}
-
-		/* File browser row insert button — hidden by default, shown on
-		   hover for image file rows via CSS attribute selectors. */
-		.pict-fb-insert-btn
-		{
-			display: none;
-			position: absolute;
-			right: 6px;
-			top: 50%;
-			transform: translateY(-50%);
-			background: #2E7D74;
-			color: var(--theme-color-background-panel, #FFF);
-			border: none;
-			border-radius: 4px;
-			font-size: 0.78rem;
-			font-weight: 700;
-			line-height: 1;
-			padding: 2px 7px;
-			cursor: pointer;
-		}
-		.pict-fb-insert-btn:hover
-		{
-			background: #3A9E92;
-		}
-		/* Make the row position:relative so the button can be absolutely placed */
-		#ContentEditor-Sidebar-Container .pict-fb-detail-row
-		{
-			position: relative;
-		}
-		/* Show the insert button on hover for image file extensions.
-		   CSS attribute selector [data-name$=".ext" i] matches
-		   the end of the data-name attribute, case-insensitive. */
-		#ContentEditor-Sidebar-Container .pict-fb-detail-row[data-name$=".png" i]:hover .pict-fb-insert-btn,
-		#ContentEditor-Sidebar-Container .pict-fb-detail-row[data-name$=".jpg" i]:hover .pict-fb-insert-btn,
-		#ContentEditor-Sidebar-Container .pict-fb-detail-row[data-name$=".jpeg" i]:hover .pict-fb-insert-btn,
-		#ContentEditor-Sidebar-Container .pict-fb-detail-row[data-name$=".gif" i]:hover .pict-fb-insert-btn,
-		#ContentEditor-Sidebar-Container .pict-fb-detail-row[data-name$=".webp" i]:hover .pict-fb-insert-btn,
-		#ContentEditor-Sidebar-Container .pict-fb-detail-row[data-name$=".svg" i]:hover .pict-fb-insert-btn,
-		#ContentEditor-Sidebar-Container .pict-fb-detail-row[data-name$=".bmp" i]:hover .pict-fb-insert-btn,
-		#ContentEditor-Sidebar-Container .pict-fb-detail-row[data-name$=".avif" i]:hover .pict-fb-insert-btn,
-		#ContentEditor-Sidebar-Container .pict-fb-detail-row[data-name$=".apng" i]:hover .pict-fb-insert-btn,
-		#ContentEditor-Sidebar-Container .pict-fb-detail-row[data-name$=".ico" i]:hover .pict-fb-insert-btn,
-		#ContentEditor-Sidebar-Container .pict-fb-detail-row[data-name$=".tiff" i]:hover .pict-fb-insert-btn,
-		#ContentEditor-Sidebar-Container .pict-fb-detail-row[data-name$=".tif" i]:hover .pict-fb-insert-btn,
-		#ContentEditor-Sidebar-Container .pict-fb-detail-row[data-name$=".jfif" i]:hover .pict-fb-insert-btn
-		{
-			display: inline-block;
-		}
-
-		/* ============================================
-		   RESPONSIVE: Tablet / Phone (max-width: 768px)
-		   ============================================ */
-		@media (max-width: 768px)
-		{
-			/* Prevent horizontal scroll on the whole app */
-			#ContentEditor-Application-Container
-			{
-				overflow-x: hidden;
-				width: 100%;
-				max-width: 100vw;
-			}
-
-			/* Stack sidebar ABOVE editor instead of side-by-side */
-			.content-editor-body
-			{
-				flex-direction: column;
-			}
-
-			/* Both panels become full-width horizontal strips */
-			.content-editor-sidebar-wrap,
-			.content-editor-doc-panel
-			{
-				width: 100% !important;
-				max-height: 40vh;
-				flex-shrink: 0;
-				border-right: none;
-			}
-			.content-editor-sidebar-wrap
-			{
-				border-bottom: 1px solid #DDD6CA;
-			}
-			.content-editor-doc-panel
-			{
-				border-left: none;
-				border-top: 1px solid #DDD6CA;
-			}
-
-			/* Give the Reference and Topics tabs much more room on mobile
-			   since they contain long scrollable content */
-			.content-editor-sidebar-wrap.sidebar-expanded-pane
-			{
-				max-height: 70vh;
-			}
-
-			/* When panels are collapsed on mobile, zero height instead of
-			   zero width since the layout is stacked vertically */
-			.content-editor-sidebar-wrap.pict-panel-collapsed,
-			.content-editor-doc-panel.pict-panel-collapsed
-			{
-				width: 100% !important;
-				max-height: 0;
-			}
-			.content-editor-sidebar-wrap.pict-panel-collapsed .content-editor-sidebar-inner
-			{
-				display: none;
-			}
-
-			/* Reduce editor container padding (less gutters) */
-			#ContentEditor-Editor-Container
-			{
-				padding: 24px 8px 8px 8px;
-			}
-
-			/* Reduce binary preview padding */
-			.binary-preview-image
-			{
-				padding: 12px;
-			}
-			.binary-preview-card
-			{
-				padding: 12px;
-				gap: 12px;
-			}
-
-			/* Upload panel: fill more of the screen */
-			.content-editor-upload-panel
-			{
-				width: 95vw;
-				max-width: 95vw;
-			}
-
-		}
-
-		/* ============================================
-		   RESPONSIVE: Small phone (max-width: 480px)
-		   ============================================ */
-		@media (max-width: 480px)
-		{
-			/* Even tighter editor padding */
-			#ContentEditor-Editor-Container
-			{
-				padding: 20px 4px 4px 4px;
-			}
-
-			/* Sidebar gets a smaller max height */
-			.content-editor-sidebar-wrap
-			{
-				max-height: 35vh;
-			}
-			.content-editor-sidebar-wrap.sidebar-expanded-pane
-			{
-				max-height: 65vh;
-			}
 		}
 	`,
 
@@ -711,32 +286,13 @@ const _ViewConfiguration =
 	[
 		{
 			Hash: "ContentEditor-Layout-Shell-Template",
+			// Minimal template: the shell takes over the mount div and
+			// builds its own DOM (top row, middle row with sides + center,
+			// bottom row, overlay layer). The upload overlay is rendered
+			// here as a fixed-position sibling so it floats above the
+			// shell-managed chrome.
 			Template: /*html*/`
-<div id="ContentEditor-TopBar-Container"></div>
-<div class="content-editor-body">
-	<div class="content-editor-sidebar-wrap" id="ContentEditor-SidebarWrap">
-		<div class="content-editor-sidebar-inner">
-			<div class="content-editor-sidebar-tabs">
-				<button class="content-editor-sidebar-tab active" id="ContentEditor-SidebarTab-Files"
-					onclick="{~P~}.views['ContentEditor-Layout'].switchSidebarTab('files')">Files</button>
-				<button class="content-editor-sidebar-tab" id="ContentEditor-SidebarTab-Reference"
-					onclick="{~P~}.views['ContentEditor-Layout'].switchSidebarTab('reference')">Reference</button>
-				<button class="content-editor-sidebar-tab" id="ContentEditor-SidebarTab-Topics"
-					onclick="{~P~}.views['ContentEditor-Layout'].switchSidebarTab('topics')">Topics</button>
-				<button class="content-editor-sidebar-tab" id="ContentEditor-SidebarTab-Vocabulary"
-					onclick="{~P~}.views['ContentEditor-Layout'].switchSidebarTab('vocabulary')">Vocab</button>
-				<button class="content-editor-sidebar-addfile" id="ContentEditor-SidebarAddBtn" title="New file"
-					onclick="{~P~}.views['ContentEditor-Layout'].onSidebarAddClick()">+</button>
-			</div>
-			<div id="ContentEditor-Sidebar-Container" class="content-editor-sidebar-pane"></div>
-			<div id="ContentEditor-SidebarReference-Container" class="content-editor-sidebar-pane" style="display:none"></div>
-			<div id="ContentEditor-SidebarTopics-Container" class="content-editor-sidebar-pane" style="display:none"></div>
-			<div id="ContentEditor-Vocabulary-Container" class="content-editor-sidebar-pane" style="display:none"></div>
-		</div>
-	</div>
-	<div id="ContentEditor-Editor-Container"></div>
-	<div id="ContentEditor-Documentation-Panel" class="content-editor-doc-panel"></div>
-</div>
+<div id="ContentEditor-Layout-Mount" style="height:100%"></div>
 <div class="content-editor-upload-overlay" id="ContentEditor-UploadOverlay"
 	onclick="{~P~}.views['ContentEditor-Layout'].onUploadOverlayClick(event)">
 	<div class="content-editor-upload-panel">
@@ -784,155 +340,197 @@ class ContentEditorLayoutView extends libPictView
 	constructor(pFable, pOptions, pServiceHash)
 	{
 		super(pFable, pOptions, pServiceHash);
-
-		this._minSidebarWidth = 140;
-		this._maxSidebarWidth = 600;
+		this._shell = null;
+		this._shellPanelsBuilt = false;
 	}
 
 	onAfterRender(pRenderable, pRenderDestinationAddress, pRecord, pContent)
 	{
-		// Render child views
-		this.pict.views['ContentEditor-TopBar'].render();
-
-		// Show welcome message in editor area if no file loaded
-		let tmpEditorContainer = this.pict.ContentAssignment.getElement('#ContentEditor-Editor-Container');
-		if (tmpEditorContainer && tmpEditorContainer[0] && !this.pict.AppData.ContentEditor.CurrentFile)
-		{
-			this.pict.ContentAssignment.assignContent('#ContentEditor-Editor-Container', '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#8A7F72;font-size:1.1em;">Select a file from the sidebar to begin editing</div>');
-		}
-
-		// Inject CSS
 		this.pict.CSSMap.injectCSS();
 
-		// Attach resizable/collapsible panel behavior to the
-		// left sidebar via pict-section-modal's panel system.
-		let tmpSelf = this;
-		let tmpSettings = this.pict.AppData.ContentEditor;
-		let tmpModal = this.pict.views['Pict-Section-Modal'];
-		if (tmpModal && typeof tmpModal.panel === 'function')
+		// Build the shell on first render. Subsequent re-renders are
+		// rare (the chrome is data-free) and shouldn't rebuild the shell.
+		if (!this._shellPanelsBuilt)
 		{
-			let tmpIsMobile = (window.innerWidth <= 768);
-			this._sidebarPanel = tmpModal.panel('#ContentEditor-SidebarWrap',
-				{
-					position: 'left',
-					width: tmpSettings.SidebarWidth || 250,
-					minWidth: 140,
-					maxWidth: 600,
-					collapsible: true,
-					collapsed: tmpSettings.SidebarCollapsed || tmpIsMobile,
-					persist: true,
-					persistKey: 'ContentEditor-Sidebar',
-					onResize: (pWidth) =>
-					{
-						tmpSettings.SidebarWidth = pWidth;
-						tmpSelf.pict.PictApplication.saveSettings();
-					},
-					onToggle: (pCollapsed) =>
-					{
-						tmpSettings.SidebarCollapsed = pCollapsed;
-						tmpSelf.pict.PictApplication.saveSettings();
-					}
-				});
+			this._buildShell();
+			this._shellPanelsBuilt = true;
 		}
 
-		// Listen for hash changes
-		window.addEventListener('hashchange', () =>
+		// Welcome message in the empty editor area until a file is
+		// loaded — appears on first paint and is overwritten as soon
+		// as navigateToFile() mounts an editor.
+		let tmpDest = this.pict.ContentAssignment.getElement('#ContentEditor-Editor-Container');
+		if (tmpDest && tmpDest[0] && !(this.pict.AppData.ContentEditor && this.pict.AppData.ContentEditor.CurrentFile))
 		{
-			tmpSelf.pict.PictApplication.resolveHash();
-		});
+			this.pict.ContentAssignment.assignContent('#ContentEditor-Editor-Container',
+				'<div class="content-editor-empty">Select a file from the sidebar to begin editing</div>');
+		}
 
-		// Keyboard shortcuts
-		window.addEventListener('keydown', (pEvent) =>
-		{
-			// Cmd+S (Mac) / Ctrl+S (Windows/Linux) to save
-			if ((pEvent.metaKey || pEvent.ctrlKey) && pEvent.key === 's')
-			{
-				pEvent.preventDefault();
-				tmpSelf.pict.PictApplication.saveCurrentFile();
-				return;
-			}
-
-			// F1 — Toggle between Reference and Files; open sidebar if collapsed
-			if (pEvent.key === 'F1')
-			{
-				pEvent.preventDefault();
-				tmpSelf._handleF1();
-				return;
-			}
-
-			// F2 — Toggle sidebar collapsed/expanded
-			if (pEvent.key === 'F2')
-			{
-				pEvent.preventDefault();
-				tmpSelf.toggleSidebar();
-				return;
-			}
-
-			// F3 or Cmd+Shift+U / Ctrl+Shift+U — Toggle image upload form
-			if (pEvent.key === 'F3')
-			{
-				pEvent.preventDefault();
-				tmpSelf.toggleUploadForm();
-				return;
-			}
-			if ((pEvent.metaKey || pEvent.ctrlKey) && pEvent.shiftKey && (pEvent.key === 'u' || pEvent.key === 'U'))
-			{
-				pEvent.preventDefault();
-				tmpSelf.toggleUploadForm();
-				return;
-			}
-
-			// F4 — Add topic from cursor / toggle Topics tab
-			if (pEvent.key === 'F4')
-			{
-				pEvent.preventDefault();
-				tmpSelf.pict.PictApplication.handleF4TopicAction();
-				return;
-			}
-
-			// Cmd+Shift+T / Ctrl+Shift+T — Toggle Topics tab
-			if ((pEvent.metaKey || pEvent.ctrlKey) && pEvent.shiftKey && (pEvent.key === 't' || pEvent.key === 'T'))
-			{
-				pEvent.preventDefault();
-				tmpSelf.pict.PictApplication.handleF4TopicAction();
-				return;
-			}
-
-			// Escape — Close the current file (if no overlay is open)
-			if (pEvent.key === 'Escape')
-			{
-				// Don't close if the upload overlay is open (let it close that first)
-				let tmpUploadOverlay = tmpSelf.pict.ContentAssignment.getElement('#ContentEditor-UploadOverlay')[0];
-				if (tmpUploadOverlay && tmpUploadOverlay.classList.contains('open'))
-				{
-					tmpSelf.closeUploadForm();
-					return;
-				}
-
-				// Don't interfere if the confirmation dialog is open
-				// (its own Y/N/Esc handler takes precedence)
-				let tmpConfirmOverlay = tmpSelf.pict.ContentAssignment.getElement('#ContentEditor-ConfirmOverlay')[0];
-				if (tmpConfirmOverlay && tmpConfirmOverlay.classList.contains('open'))
-				{
-					return;
-				}
-
-				// Close the current file
-				if (tmpSelf.pict.AppData.ContentEditor.CurrentFile)
-				{
-					pEvent.preventDefault();
-					tmpSelf.pict.PictApplication.closeCurrentFile();
-					return;
-				}
-			}
-		});
+		this._wireGlobalKeyboardShortcuts();
+		this._wireHashChangeListener();
 
 		return super.onAfterRender(pRenderable, pRenderDestinationAddress, pRecord, pContent);
 	}
 
+	_buildShell()
+	{
+		let tmpModalSection = this.pict.views['Pict-Section-Modal'];
+		if (!tmpModalSection || typeof tmpModalSection.shell !== 'function')
+		{
+			this.pict.log.warn('ContentEditor-Layout: pict-section-modal.shell not available');
+			return;
+		}
+
+		let tmpMount = document.getElementById('ContentEditor-Layout-Mount');
+		if (!tmpMount)
+		{
+			this.pict.log.warn('ContentEditor-Layout: #ContentEditor-Layout-Mount not in DOM yet');
+			return;
+		}
+
+		let tmpSettings = (this.pict.AppData && this.pict.AppData.ContentEditor) || {};
+		let tmpIsMobile = (typeof window !== 'undefined' && window.innerWidth <= 768);
+
+		this._shell = tmpModalSection.shell(tmpMount, { PersistenceKey: 'ContentEditor-Shell' });
+
+		// Top — theme chrome. Theme-TopBar fills it with BrandMark on the
+		// left, host-supplied NavView (ContentEditor-TopBar-Nav) showing
+		// the file name + dirty indicator, and host-supplied UserView
+		// (ContentEditor-TopBar-User) on the right with save status,
+		// stats, action buttons, and the gear that toggles the hidden
+		// settings panel.
+		this._shell.addPanel(
+		{
+			Hash: 'topbar',
+			Side: 'top',
+			Mode: 'fixed',
+			Size: 48,
+			ContentDestinationId: 'Theme-TopBar',
+			ContentView: 'Theme-TopBar'
+		});
+
+		// Left — sidebar. 4-tab UI (Files / Reference / Topics / Vocab)
+		// hosted by ContentEditor-Sidebar-Tabs. ResponsiveDrawer flips
+		// to a top-drawer pattern below 900px wide. Initial collapsed
+		// state comes from persisted user settings.
+		this._shell.addPanel(
+		{
+			Hash: 'sidebar',
+			Side: 'left',
+			Mode: 'resizable',
+			Size: (typeof tmpSettings.SidebarWidth === 'number' && tmpSettings.SidebarWidth > 0) ? tmpSettings.SidebarWidth : 250,
+			MinSize: 140,
+			MaxSize: 600,
+			Collapsed: !!tmpSettings.SidebarCollapsed || tmpIsMobile,
+			Title: 'Files',
+			ContentDestinationId: 'ContentEditor-Sidebar-Host',
+			ContentView: 'ContentEditor-Sidebar-Tabs',
+			ResponsiveDrawer: 900,
+			OnExpand:   () => { this._persistSidebar(false); },
+			OnCollapse: () => { this._persistSidebar(true); }
+		});
+
+		// Right (visible) — documentation panel. Pict-InlineDocumentation
+		// provider initializes content into #ContentEditor-Documentation-
+		// Panel later in the app's onAfterInitializeAsync, after this
+		// shell has created the destination. Starts collapsed so the
+		// user discovers it through the Docs button or the edge tab.
+		this._shell.addPanel(
+		{
+			Hash: 'docpanel',
+			Side: 'right',
+			Mode: 'resizable',
+			Size: 340,
+			MinSize: 240,
+			MaxSize: 600,
+			Collapsed: true,
+			Title: 'Docs',
+			ContentDestinationId: 'ContentEditor-Documentation-Panel'
+		});
+
+		// Right (overlay, Hidden) — settings panel. Hidden:true means
+		// no edge affordance when collapsed; the gear button in the
+		// User slot is the only way to reveal it. Overlay position
+		// floats above the doc panel rather than pushing it aside.
+		this._shell.addPanel(
+		{
+			Hash: 'settings',
+			Side: 'right',
+			Mode: 'resizable',
+			Position: 'overlay',
+			Size: 360,
+			MinSize: 280,
+			MaxSize: 540,
+			Hidden: true,
+			Collapsed: true,
+			ContentDestinationId: 'ContentEditor-Settings-Panel',
+			ContentView: 'ContentEditor-SettingsPanel'
+		});
+
+		// Center — editor container.
+		this._shell.center({ ContentDestinationId: 'ContentEditor-Editor-Container' });
+	}
+
+	_persistSidebar(pCollapsed)
+	{
+		if (!this.pict.AppData || !this.pict.AppData.ContentEditor) { return; }
+		this.pict.AppData.ContentEditor.SidebarCollapsed = !!pCollapsed;
+		if (this.pict.PictApplication && typeof this.pict.PictApplication.saveSettings === 'function')
+		{
+			this.pict.PictApplication.saveSettings();
+		}
+	}
+
+	// ─────────────────────────────────────────────
+	//  Public panel accessors used by other views (e.g. the gear button
+	//  in TopBar-User → toggleSettingsPanel())
+	// ─────────────────────────────────────────────
+
+	getSidebarPanel()  { return this._shell ? this._shell.getPanel('sidebar')  : null; }
+	getDocPanel()      { return this._shell ? this._shell.getPanel('docpanel') : null; }
+	getSettingsPanel() { return this._shell ? this._shell.getPanel('settings') : null; }
+
+	toggleSidebar()
+	{
+		let tmpPanel = this.getSidebarPanel();
+		if (tmpPanel) { tmpPanel.toggle(); }
+	}
+
+	toggleDocPanel()
+	{
+		let tmpPanel = this.getDocPanel();
+		if (!tmpPanel) { return; }
+		tmpPanel.toggle();
+
+		// On first expand, ensure the inline-doc provider has loaded
+		// something into the panel (it initializes during the app's
+		// onAfterInitializeAsync but the user may toggle the panel
+		// before that completes, in which case the panel renders
+		// empty until the provider catches up).
+		if (!tmpPanel.Collapsed && !this._docPanelSeeded)
+		{
+			this._docPanelSeeded = true;
+			let tmpProvider = this.pict.providers && this.pict.providers['Pict-InlineDocumentation'];
+			if (tmpProvider && typeof tmpProvider.loadDocument === 'function')
+			{
+				tmpProvider.loadDocument('README.md');
+			}
+		}
+	}
+
+	toggleSettingsPanel()
+	{
+		let tmpPanel = this.getSettingsPanel();
+		if (tmpPanel) { tmpPanel.toggle(); }
+	}
+
+	// ─────────────────────────────────────────────
+	//  Sidebar tab switching — called by Sidebar-Tabs view template
+	// ─────────────────────────────────────────────
+
 	/**
-	 * Handle the sidebar "+" button click. Dispatches based on
-	 * which tab is currently active: Files → new file, Vocab → new term.
+	 * Handle the sidebar "+" button. Dispatches based on the active
+	 * tab: Files → new file, Vocab → new term.
 	 */
 	onSidebarAddClick()
 	{
@@ -947,362 +545,165 @@ class ContentEditorLayoutView extends libPictView
 		}
 		else
 		{
-			// Default: create a new file
 			this.pict.PictApplication.promptNewFile();
 		}
 	}
 
-	/**
-	 * Toggle the right-side documentation panel.
-	 *
-	 * If the panel was attached via the pict-section-modal panel
-	 * system, delegate to the panel handle.  Otherwise fall back
-	 * to the legacy display toggle.
-	 */
-	toggleDocPanel()
-	{
-		// Use the panel handle if available (resize + collapse system)
-		if (this.pict.PictApplication._docPanel)
-		{
-			let tmpDocPanel = this.pict.PictApplication._docPanel;
-			tmpDocPanel.toggle();
-
-			// On first expand, trigger the inline docs provider to
-			// load a default document.
-			let tmpPanel = this.pict.ContentAssignment.getElement('#ContentEditor-Documentation-Panel')[0];
-			if (tmpPanel && !tmpPanel._initialized)
-			{
-				tmpPanel._initialized = true;
-				let tmpDocProvider = this.pict.providers && this.pict.providers['Pict-InlineDocumentation'];
-				if (tmpDocProvider && typeof tmpDocProvider.loadDocument === 'function')
-				{
-					tmpDocProvider.loadDocument('README.md');
-				}
-			}
-			return;
-		}
-
-		// Legacy fallback: simple display toggle
-		let tmpPanel = this.pict.ContentAssignment.getElement('#ContentEditor-Documentation-Panel')[0];
-		if (!tmpPanel) return;
-
-		let tmpVisible = tmpPanel.style.display !== 'none';
-		tmpPanel.style.display = tmpVisible ? 'none' : '';
-
-		if (!tmpVisible)
-		{
-			let tmpDocProvider = this.pict.providers && this.pict.providers['Pict-InlineDocumentation'];
-			if (tmpDocProvider && !tmpPanel._initialized)
-			{
-				tmpPanel._initialized = true;
-				if (typeof tmpDocProvider.loadDocument === 'function')
-				{
-					tmpDocProvider.loadDocument('README.md');
-				}
-			}
-		}
-	}
-
-	/**
-	 * Toggle the sidebar collapsed/expanded state.
-	 */
-	toggleSidebar()
-	{
-		if (this._sidebarPanel)
-		{
-			this._sidebarPanel.toggle();
-			return;
-		}
-	}
-
-	/**
-	 * Switch the active sidebar tab.
-	 *
-	 * @param {string} pTab - 'files', 'reference', or 'topics'
-	 */
 	switchSidebarTab(pTab)
 	{
 		let tmpPanes =
 		{
-			files: this.pict.ContentAssignment.getElement('#ContentEditor-Sidebar-Container')[0],
-			reference: this.pict.ContentAssignment.getElement('#ContentEditor-SidebarReference-Container')[0],
-			topics: this.pict.ContentAssignment.getElement('#ContentEditor-SidebarTopics-Container')[0],
+			files:      this.pict.ContentAssignment.getElement('#ContentEditor-Sidebar-Container')[0],
+			reference:  this.pict.ContentAssignment.getElement('#ContentEditor-SidebarReference-Container')[0],
+			topics:     this.pict.ContentAssignment.getElement('#ContentEditor-SidebarTopics-Container')[0],
 			vocabulary: this.pict.ContentAssignment.getElement('#ContentEditor-Vocabulary-Container')[0]
 		};
-
 		let tmpTabs =
 		{
-			files: this.pict.ContentAssignment.getElement('#ContentEditor-SidebarTab-Files')[0],
-			reference: this.pict.ContentAssignment.getElement('#ContentEditor-SidebarTab-Reference')[0],
-			topics: this.pict.ContentAssignment.getElement('#ContentEditor-SidebarTab-Topics')[0],
+			files:      this.pict.ContentAssignment.getElement('#ContentEditor-SidebarTab-Files')[0],
+			reference:  this.pict.ContentAssignment.getElement('#ContentEditor-SidebarTab-Reference')[0],
+			topics:     this.pict.ContentAssignment.getElement('#ContentEditor-SidebarTab-Topics')[0],
 			vocabulary: this.pict.ContentAssignment.getElement('#ContentEditor-SidebarTab-Vocabulary')[0]
 		};
 
-		// Hide all panes and deactivate all tabs
 		for (let tmpKey in tmpPanes)
 		{
 			if (tmpPanes[tmpKey]) tmpPanes[tmpKey].style.display = 'none';
-			if (tmpTabs[tmpKey]) tmpTabs[tmpKey].classList.remove('active');
+			if (tmpTabs[tmpKey])  tmpTabs[tmpKey].classList.remove('active');
 		}
-
-		// Show the selected pane and activate the selected tab
 		if (tmpPanes[pTab]) tmpPanes[pTab].style.display = '';
-		if (tmpTabs[pTab]) tmpTabs[pTab].classList.add('active');
+		if (tmpTabs[pTab])  tmpTabs[pTab].classList.add('active');
 
-		// On mobile, give the Reference and Topics tabs more vertical space
-		let tmpWrap = this.pict.ContentAssignment.getElement('#ContentEditor-SidebarWrap')[0];
-		if (tmpWrap)
-		{
-			if (pTab === 'reference' || pTab === 'topics' || pTab === 'vocabulary')
-			{
-				tmpWrap.classList.add('sidebar-expanded-pane');
-			}
-			else
-			{
-				tmpWrap.classList.remove('sidebar-expanded-pane');
-			}
-		}
-
-		// Update the "+" button tooltip based on active tab
 		let tmpAddBtn = this.pict.ContentAssignment.getElement('#ContentEditor-SidebarAddBtn')[0];
 		if (tmpAddBtn)
 		{
 			tmpAddBtn.title = (pTab === 'vocabulary') ? 'New vocabulary term' : 'New file';
 		}
 
-		// Lazy-render the Reference view on first switch
+		// Lazy-render the Reference / Topics views on first switch.
 		if (pTab === 'reference')
 		{
 			let tmpRefView = this.pict.views['ContentEditor-MarkdownReference'];
-			if (tmpRefView && !tmpRefView._hasRendered)
-			{
-				tmpRefView.render();
-			}
+			if (tmpRefView && !tmpRefView._hasRendered) { tmpRefView.render(); }
 		}
-
-		// Lazy-render the Topics view on first switch
 		if (pTab === 'topics')
 		{
 			let tmpTopicsView = this.pict.views['ContentEditor-Topics'];
-			if (tmpTopicsView && !tmpTopicsView._hasRendered)
-			{
-				tmpTopicsView.render();
-			}
+			if (tmpTopicsView && !tmpTopicsView._hasRendered) { tmpTopicsView.render(); }
 		}
-
-		// Lazy-render the Vocabulary view on first switch
 		if (pTab === 'vocabulary')
 		{
 			let tmpVocabView = this.pict.views['ContentEditor-Vocabulary'];
-			if (tmpVocabView)
+			if (tmpVocabView && typeof tmpVocabView.refreshTermList === 'function')
 			{
 				tmpVocabView.refreshTermList();
 			}
 		}
 	}
 
-	/**
-	 * Handle F1: toggle between Reference and Files sidebar tabs.
-	 * If the sidebar is collapsed, open it and switch to Reference.
-	 */
-	_handleF1()
-	{
-		let tmpSettings = this.pict.AppData.ContentEditor;
-
-		// If sidebar is collapsed, expand it and go to Reference
-		if (tmpSettings.SidebarCollapsed)
-		{
-			this.toggleSidebar();
-			this.switchSidebarTab('reference');
-			return;
-		}
-
-		// Determine which tab is currently active
-		let tmpRefTab = this.pict.ContentAssignment.getElement('#ContentEditor-SidebarTab-Reference')[0];
-		let tmpIsOnRef = tmpRefTab && tmpRefTab.classList.contains('active');
-
-		// Toggle: if on Reference, go to Files; otherwise go to Reference
-		if (tmpIsOnRef)
-		{
-			this.switchSidebarTab('files');
-		}
-		else
-		{
-			this.switchSidebarTab('reference');
-		}
-	}
-
-	/**
-	 * Return the identifier of the currently active sidebar tab.
-	 *
-	 * @returns {string} 'files', 'reference', or 'topics'
-	 */
 	getActiveSidebarTab()
 	{
-		let tmpRefTab = this.pict.ContentAssignment.getElement('#ContentEditor-SidebarTab-Reference')[0];
-		let tmpTopicsTab = this.pict.ContentAssignment.getElement('#ContentEditor-SidebarTab-Topics')[0];
-		let tmpVocabTab = this.pict.ContentAssignment.getElement('#ContentEditor-SidebarTab-Vocabulary')[0];
-
-		if (tmpRefTab && tmpRefTab.classList.contains('active')) return 'reference';
-		if (tmpTopicsTab && tmpTopicsTab.classList.contains('active')) return 'topics';
-		if (tmpVocabTab && tmpVocabTab.classList.contains('active')) return 'vocabulary';
+		let tmpRef    = this.pict.ContentAssignment.getElement('#ContentEditor-SidebarTab-Reference')[0];
+		let tmpTopics = this.pict.ContentAssignment.getElement('#ContentEditor-SidebarTab-Topics')[0];
+		let tmpVocab  = this.pict.ContentAssignment.getElement('#ContentEditor-SidebarTab-Vocabulary')[0];
+		if (tmpRef    && tmpRef.classList.contains('active'))    return 'reference';
+		if (tmpTopics && tmpTopics.classList.contains('active')) return 'topics';
+		if (tmpVocab  && tmpVocab.classList.contains('active'))  return 'vocabulary';
 		return 'files';
 	}
 
-	/**
-	 * Toggle the image upload form open/closed.
-	 */
+	_handleF1()
+	{
+		let tmpSidebar = this.getSidebarPanel();
+		if (tmpSidebar && tmpSidebar.Collapsed)
+		{
+			tmpSidebar.expand();
+			this.switchSidebarTab('reference');
+			return;
+		}
+		let tmpRef = this.pict.ContentAssignment.getElement('#ContentEditor-SidebarTab-Reference')[0];
+		let tmpIsOnRef = tmpRef && tmpRef.classList.contains('active');
+		this.switchSidebarTab(tmpIsOnRef ? 'files' : 'reference');
+	}
+
+	// ─────────────────────────────────────────────
+	//  Upload overlay (F3 / Ctrl-Shift-U)
+	// ─────────────────────────────────────────────
+
 	toggleUploadForm()
 	{
 		let tmpOverlay = this.pict.ContentAssignment.getElement('#ContentEditor-UploadOverlay')[0];
-		if (!tmpOverlay)
-		{
-			return;
-		}
-
-		if (tmpOverlay.classList.contains('open'))
-		{
-			this.closeUploadForm();
-		}
-		else
-		{
-			this.openUploadForm();
-		}
+		if (!tmpOverlay) { return; }
+		if (tmpOverlay.classList.contains('open')) { this.closeUploadForm(); }
+		else                                       { this.openUploadForm();  }
 	}
 
-	/**
-	 * Open the image upload form.
-	 */
 	openUploadForm()
 	{
 		let tmpOverlay = this.pict.ContentAssignment.getElement('#ContentEditor-UploadOverlay')[0];
-		if (tmpOverlay)
-		{
-			tmpOverlay.classList.add('open');
-		}
-
-		// Wire up drag-drop on the dropzone
+		if (tmpOverlay) { tmpOverlay.classList.add('open'); }
 		this._wireUploadDropzone();
 	}
 
-	/**
-	 * Close the image upload form and reset its state.
-	 */
 	closeUploadForm()
 	{
 		let tmpOverlay = this.pict.ContentAssignment.getElement('#ContentEditor-UploadOverlay')[0];
-		if (tmpOverlay)
-		{
-			tmpOverlay.classList.remove('open');
-		}
-
-		// Reset the file input so the same file can be re-selected
+		if (tmpOverlay) { tmpOverlay.classList.remove('open'); }
 		let tmpInput = this.pict.ContentAssignment.getElement('#ContentEditor-UploadFileInput')[0];
-		if (tmpInput)
-		{
-			tmpInput.value = '';
-		}
-
-		// Clear status and result
+		if (tmpInput) { tmpInput.value = ''; }
 		this.pict.ContentAssignment.assignContent('#ContentEditor-UploadStatus', '');
 		this.pict.ContentAssignment.assignContent('#ContentEditor-UploadResult', '');
 	}
 
-	/**
-	 * Close overlay if the background (not the panel) is clicked.
-	 *
-	 * @param {MouseEvent} pEvent
-	 */
 	onUploadOverlayClick(pEvent)
 	{
-		if (pEvent.target.id === 'ContentEditor-UploadOverlay')
-		{
-			this.closeUploadForm();
-		}
+		if (pEvent.target.id === 'ContentEditor-UploadOverlay') { this.closeUploadForm(); }
 	}
 
-	/**
-	 * Handle file selection from the file input.
-	 *
-	 * @param {HTMLInputElement} pInput
-	 */
 	onUploadFileSelected(pInput)
 	{
-		if (pInput.files && pInput.files.length > 0)
-		{
-			this._uploadFile(pInput.files[0]);
-		}
+		if (pInput.files && pInput.files.length > 0) { this._uploadFile(pInput.files[0]); }
 	}
 
-	/**
-	 * Wire drag-and-drop events on the upload dropzone.
-	 */
 	_wireUploadDropzone()
 	{
 		let tmpDropzone = this.pict.ContentAssignment.getElement('#ContentEditor-UploadDropzone')[0];
-		if (!tmpDropzone || tmpDropzone._wired)
-		{
-			return;
-		}
+		if (!tmpDropzone || tmpDropzone._wired) { return; }
 		tmpDropzone._wired = true;
 
 		let tmpSelf = this;
-
-		tmpDropzone.addEventListener('dragover', (pEvent) =>
+		tmpDropzone.addEventListener('dragover',  (e) => { e.preventDefault(); e.stopPropagation(); tmpDropzone.classList.add('dragover'); });
+		tmpDropzone.addEventListener('dragleave', (e) => { e.preventDefault(); e.stopPropagation(); tmpDropzone.classList.remove('dragover'); });
+		tmpDropzone.addEventListener('drop',      (e) =>
 		{
-			pEvent.preventDefault();
-			pEvent.stopPropagation();
-			tmpDropzone.classList.add('dragover');
-		});
-
-		tmpDropzone.addEventListener('dragleave', (pEvent) =>
-		{
-			pEvent.preventDefault();
-			pEvent.stopPropagation();
+			e.preventDefault(); e.stopPropagation();
 			tmpDropzone.classList.remove('dragover');
-		});
-
-		tmpDropzone.addEventListener('drop', (pEvent) =>
-		{
-			pEvent.preventDefault();
-			pEvent.stopPropagation();
-			tmpDropzone.classList.remove('dragover');
-
-			if (pEvent.dataTransfer && pEvent.dataTransfer.files && pEvent.dataTransfer.files.length > 0)
+			if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0)
 			{
-				tmpSelf._uploadFile(pEvent.dataTransfer.files[0]);
+				tmpSelf._uploadFile(e.dataTransfer.files[0]);
 			}
 		});
 	}
 
-	/**
-	 * Upload a file using the ContentEditor provider.
-	 *
-	 * @param {File} pFile - The image file to upload
-	 */
 	_uploadFile(pFile)
 	{
-		if (!pFile)
-		{
-			return;
-		}
-
-		// Validate it's an image
+		if (!pFile) { return; }
 		if (!pFile.type.startsWith('image/'))
 		{
-			this.pict.ContentAssignment.assignContent('#ContentEditor-UploadStatus', '<span class="content-editor-upload-status-error">Only image files are supported.</span>');
+			this.pict.ContentAssignment.assignContent('#ContentEditor-UploadStatus',
+				'<span class="content-editor-upload-status-error">Only image files are supported.</span>');
 			return;
 		}
-
-		this.pict.ContentAssignment.assignContent('#ContentEditor-UploadStatus', 'Uploading <strong>' + pFile.name + '</strong>...');
+		this.pict.ContentAssignment.assignContent('#ContentEditor-UploadStatus',
+			'Uploading <strong>' + pFile.name + '</strong>...');
 		this.pict.ContentAssignment.assignContent('#ContentEditor-UploadResult', '');
 
 		let tmpSelf = this;
 		let tmpProvider = this.pict.providers['ContentEditor-Provider'];
-
 		if (!tmpProvider)
 		{
-			this.pict.ContentAssignment.assignContent('#ContentEditor-UploadStatus', '<span class="content-editor-upload-status-error">Provider not available.</span>');
+			this.pict.ContentAssignment.assignContent('#ContentEditor-UploadStatus',
+				'<span class="content-editor-upload-status-error">Provider not available.</span>');
 			return;
 		}
 
@@ -1310,38 +711,117 @@ class ContentEditorLayoutView extends libPictView
 		{
 			if (pError)
 			{
-				tmpSelf.pict.ContentAssignment.assignContent('#ContentEditor-UploadStatus', '<span class="content-editor-upload-status-error">Upload failed: ' + pError + '</span>');
+				tmpSelf.pict.ContentAssignment.assignContent('#ContentEditor-UploadStatus',
+					'<span class="content-editor-upload-status-error">Upload failed: ' + pError + '</span>');
 				return;
 			}
-
-			tmpSelf.pict.ContentAssignment.assignContent('#ContentEditor-UploadStatus', '<span class="content-editor-upload-status-success">Uploaded successfully!</span>');
+			tmpSelf.pict.ContentAssignment.assignContent('#ContentEditor-UploadStatus',
+				'<span class="content-editor-upload-status-success">Uploaded successfully!</span>');
 
 			let tmpMarkdown = '![' + pFile.name + '](' + pURL + ')';
-
 			tmpSelf.pict.ContentAssignment.assignContent('#ContentEditor-UploadResult',
 				'<div class="content-editor-upload-result">' +
 				'<div class="content-editor-upload-result-label">Markdown</div>' +
 				'<div class="content-editor-upload-result-url">' +
-				'<span class="content-editor-upload-result-text">' + tmpMarkdown + '</span>' +
-				'<button class="content-editor-upload-result-copy" onclick="' +
-				"navigator.clipboard.writeText('" + tmpMarkdown.replace(/'/g, "\\'") + "').then(function(){this.textContent='Copied!'}.bind(this))" +
-				'">Copy</button>' +
+					'<span class="content-editor-upload-result-text">' + tmpMarkdown + '</span>' +
+					'<button class="content-editor-upload-result-copy" onclick="' +
+						"navigator.clipboard.writeText('" + tmpMarkdown.replace(/'/g, "\\'") + "').then(function(){this.textContent='Copied!'}.bind(this))" +
+					'">Copy</button>' +
 				'</div>' +
 				'<div class="content-editor-upload-result-label" style="margin-top:8px">URL</div>' +
 				'<div class="content-editor-upload-result-url">' +
-				'<span class="content-editor-upload-result-text">' + pURL + '</span>' +
-				'<button class="content-editor-upload-result-copy" onclick="' +
-				"navigator.clipboard.writeText('" + pURL.replace(/'/g, "\\'") + "').then(function(){this.textContent='Copied!'}.bind(this))" +
-				'">Copy</button>' +
+					'<span class="content-editor-upload-result-text">' + pURL + '</span>' +
+					'<button class="content-editor-upload-result-copy" onclick="' +
+						"navigator.clipboard.writeText('" + pURL.replace(/'/g, "\\'") + "').then(function(){this.textContent='Copied!'}.bind(this))" +
+					'">Copy</button>' +
 				'</div>' +
 				'</div>');
-
-			// Refresh the file list so the uploaded file shows
 			tmpSelf.pict.PictApplication.loadFileList();
+		});
+	}
+
+	// ─────────────────────────────────────────────
+	//  Keyboard + hash wiring (one-time)
+	// ─────────────────────────────────────────────
+
+	_wireHashChangeListener()
+	{
+		if (this._hashListenerWired) { return; }
+		this._hashListenerWired = true;
+		let tmpSelf = this;
+		window.addEventListener('hashchange', () =>
+		{
+			if (tmpSelf.pict.PictApplication && typeof tmpSelf.pict.PictApplication.resolveHash === 'function')
+			{
+				tmpSelf.pict.PictApplication.resolveHash();
+			}
+		});
+	}
+
+	_wireGlobalKeyboardShortcuts()
+	{
+		if (this._keysWired) { return; }
+		this._keysWired = true;
+		let tmpSelf = this;
+		window.addEventListener('keydown', (pEvent) =>
+		{
+			// Cmd/Ctrl-S — save
+			if ((pEvent.metaKey || pEvent.ctrlKey) && pEvent.key === 's')
+			{
+				pEvent.preventDefault();
+				tmpSelf.pict.PictApplication.saveCurrentFile();
+				return;
+			}
+			// F1 — Reference / Files toggle
+			if (pEvent.key === 'F1')
+			{
+				pEvent.preventDefault();
+				tmpSelf._handleF1();
+				return;
+			}
+			// F2 — sidebar collapse toggle
+			if (pEvent.key === 'F2')
+			{
+				pEvent.preventDefault();
+				tmpSelf.toggleSidebar();
+				return;
+			}
+			// F3 / Cmd+Shift+U — upload form toggle
+			if (pEvent.key === 'F3' ||
+				((pEvent.metaKey || pEvent.ctrlKey) && pEvent.shiftKey && (pEvent.key === 'u' || pEvent.key === 'U')))
+			{
+				pEvent.preventDefault();
+				tmpSelf.toggleUploadForm();
+				return;
+			}
+			// F4 / Cmd+Shift+T — topic action
+			if (pEvent.key === 'F4' ||
+				((pEvent.metaKey || pEvent.ctrlKey) && pEvent.shiftKey && (pEvent.key === 't' || pEvent.key === 'T')))
+			{
+				pEvent.preventDefault();
+				tmpSelf.pict.PictApplication.handleF4TopicAction();
+				return;
+			}
+			// Escape — close upload overlay → confirm dialog → current file
+			if (pEvent.key === 'Escape')
+			{
+				let tmpUpload = tmpSelf.pict.ContentAssignment.getElement('#ContentEditor-UploadOverlay')[0];
+				if (tmpUpload && tmpUpload.classList.contains('open'))
+				{
+					tmpSelf.closeUploadForm();
+					return;
+				}
+				let tmpConfirm = tmpSelf.pict.ContentAssignment.getElement('#ContentEditor-ConfirmOverlay')[0];
+				if (tmpConfirm && tmpConfirm.classList.contains('open')) { return; }
+				if (tmpSelf.pict.AppData.ContentEditor && tmpSelf.pict.AppData.ContentEditor.CurrentFile)
+				{
+					pEvent.preventDefault();
+					tmpSelf.pict.PictApplication.closeCurrentFile();
+				}
+			}
 		});
 	}
 }
 
 module.exports = ContentEditorLayoutView;
-
 module.exports.default_configuration = _ViewConfiguration;
