@@ -51,12 +51,26 @@ const _ViewConfiguration =
 		}
 		.content-editor-user-btn
 		{
-			padding: 6px 14px;
+			/* Explicit height + flex centering so every button (real
+			   <button> AND the <a> Preview link with an SVG inside) ends
+			   up the same physical height, with even padding above and
+			   below regardless of content. Without this, the SVG-bearing
+			   button computes a taller line-box than the text-only ones
+			   and the row becomes ragged. */
+			height: 32px;
+			padding: 0 14px;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			gap: 6px;
+			line-height: 1;
 			border: none;
 			border-radius: 4px;
 			cursor: pointer;
 			font-size: 0.8rem;
 			font-weight: 600;
+			box-sizing: border-box;
+			text-decoration: none;
 		}
 		.content-editor-user-btn-save
 		{
@@ -91,22 +105,18 @@ const _ViewConfiguration =
 			border-color: var(--theme-color-brand-primary, #8A7F72);
 			background: var(--theme-color-background-hover, rgba(255, 255, 255, 0.05));
 		}
-		.content-editor-user-btn-preview
-		{
-			display: inline-flex;
-			align-items: center;
-			gap: 6px;
-			text-decoration: none;
-		}
-		.content-editor-user-btn-preview svg { width: 14px; height: 14px; flex-shrink: 0; }
+		/* Sizing for pict-icon glyphs inside topbar buttons.  Icons are
+		   rendered via the {~I:Name~} template tag which wraps the svg
+		   in a span whose inner svg is 1em by 1em — so font-size on the
+		   wrapper drives icon size.  Slightly larger than the button
+		   text for visual weight parity. */
+		.content-editor-user-btn .pict-icon { font-size: 1.1em; }
 		.content-editor-user-btn-gear
 		{
-			padding: 6px 8px;
-			display: inline-flex;
-			align-items: center;
-			justify-content: center;
+			/* Icon-only button — square-ish padding so the glyph sits centered. */
+			padding: 0 8px;
 		}
-		.content-editor-user-btn-gear svg { width: 14px; height: 14px; }
+		.content-editor-user-btn-gear .pict-icon { font-size: 1.25em; }
 
 		/* Close-confirmation overlay (dirty-close prompt). Kept in-tree so
 		   the user view owns its own dialog state for the close button. */
@@ -163,7 +173,7 @@ const _ViewConfiguration =
 		@media (max-width: 768px)
 		{
 			.content-editor-user-stats { display: none; }
-			.content-editor-user-btn { padding: 5px 10px; font-size: 0.75rem; }
+			.content-editor-user-btn { height: 28px; padding: 0 10px; font-size: 0.75rem; }
 		}
 	`,
 
@@ -186,12 +196,7 @@ const _ViewConfiguration =
 	<a class="content-editor-user-btn content-editor-user-btn-preview"
 		href="/preview.html{~D:AppData.ContentEditor.ViewerHash~}" target="_blank" rel="noopener"
 		title="Open this document in the Docuserve preview (new tab)" aria-label="Open in Preview">
-		<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-			stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-			<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-			<polyline points="15 3 21 3 21 9"/>
-			<line x1="10" y1="14" x2="21" y2="3"/>
-		</svg>
+		{~I:ExternalLink~}
 		<span>Preview</span>
 	</a>
 	<button class="content-editor-user-btn content-editor-user-btn-docs" id="ContentEditor-DocsToggle"
@@ -199,12 +204,7 @@ const _ViewConfiguration =
 		title="Toggle documentation panel">Docs</button>
 	<button class="content-editor-user-btn content-editor-user-btn-gear"
 		onclick="{~P~}.views['ContentEditor-Layout'].toggleSettingsPanel()"
-		title="Settings" aria-label="Settings">
-		<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-			<circle cx="12" cy="12" r="3"/>
-			<path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-		</svg>
-	</button>
+		title="Settings" aria-label="Settings">{~I:Settings~}</button>
 </div>
 <div class="content-editor-confirm-overlay" id="ContentEditor-ConfirmOverlay"
 	onclick="{~P~}.PictApplication.cancelCloseFile()">

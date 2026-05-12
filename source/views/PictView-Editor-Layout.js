@@ -404,7 +404,7 @@ class ContentEditorLayoutView extends libPictView
 			Hash: 'topbar',
 			Side: 'top',
 			Mode: 'fixed',
-			Size: 48,
+			Size: 56,
 			ContentDestinationId: 'Theme-TopBar',
 			ContentView: 'Theme-TopBar'
 		});
