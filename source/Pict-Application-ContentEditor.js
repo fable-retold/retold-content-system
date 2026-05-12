@@ -1607,6 +1607,78 @@ class ContentEditorApplication extends libPictApplication
 	}
 
 	/**
+	 * Re-segment the currently open markdown document in place,
+	 * preserving any unsaved edits.
+	 *
+	 * Called from the settings panel when the user toggles
+	 * AutoSegmentMarkdown or picks a new AutoSegmentDepth. The flow:
+	 *
+	 *   1. Pull the current segments from AppData (they already include
+	 *      live in-memory edits because the markdown editor writes back
+	 *      via _onSegmentContentChange on every keystroke).
+	 *   2. Rejoin into a single string. We use '\n\n' between segments
+	 *      because:
+	 *        - At depth 1, segments were split BY blank lines, so the
+	 *          original separator was a blank line.
+	 *        - At depth >=2, segments start with a heading and conventional
+	 *          markdown puts a blank line before each heading anyway.
+	 *      The result is bit-stable across re-segmentation cycles.
+	 *   3. Re-segment with the current settings.
+	 *   4. Re-render the markdown editor; marshalToView pulls the new
+	 *      segments into the per-segment editor instances.
+	 *
+	 * No-ops when the active editor isn't markdown or no file is open.
+	 */
+	resegmentCurrentMarkdown()
+	{
+		let tmpEditorState = this.pict.AppData.ContentEditor;
+		if (!tmpEditorState || tmpEditorState.ActiveEditor !== 'markdown' || !tmpEditorState.CurrentFile)
+		{
+			return;
+		}
+
+		let tmpSegments = (tmpEditorState.Document && tmpEditorState.Document.Segments) || [];
+		if (tmpSegments.length < 1)
+		{
+			return;
+		}
+
+		// Capture dirty state so re-segmentation doesn't clear it. The
+		// rebuilt-from-segments raw content is identical to what the
+		// markdown editor would marshal back on save, so flipping
+		// segmentation is a layout-only change from the user's POV.
+		let tmpWasDirty = !!tmpEditorState.IsDirty;
+
+		let tmpRawContent = tmpSegments.map((s) => (s && typeof s.Content === 'string') ? s.Content : '').join('\n\n');
+		tmpEditorState.Document.Segments = this.segmentMarkdownContent(tmpRawContent);
+
+		let tmpEditorView = this.pict.views['ContentEditor-MarkdownEditor'];
+		if (tmpEditorView)
+		{
+			tmpEditorView.render();
+			tmpEditorView.marshalToView();
+			// Re-apply the preview mode + controls toggles after a render
+			// (same dance navigateToFile does) so they survive the segment
+			// rebuild.
+			if (typeof tmpEditorView.setPreviewMode === 'function')
+			{
+				tmpEditorView.setPreviewMode(tmpEditorState.ContentPreviewMode || 'off');
+			}
+			if (typeof tmpEditorView.toggleControls === 'function')
+			{
+				tmpEditorView.toggleControls(!!tmpEditorState.MarkdownEditingControls);
+			}
+		}
+
+		// Restore dirty state — render() above doesn't change it but the
+		// editor's marshalToView might fire content-change handlers; be
+		// defensive about it.
+		tmpEditorState.IsDirty = tmpWasDirty;
+		this.renderTopBar();
+		this.updateStats();
+	}
+
+	/**
 	 * The localStorage key used for persisting editor settings.
 	 */
 	get _settingsKey()

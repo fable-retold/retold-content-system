@@ -1,4 +1,6 @@
 const libDocuserveApplication = require('pict-docuserve');
+const libPictSectionCode      = require('pict-section-code');
+const libContentSystemBrand   = require('./ContentSystem-Brand.js');
 
 /**
  * Content Reader Application
@@ -6,12 +8,28 @@ const libDocuserveApplication = require('pict-docuserve');
  * Extends pict-docuserve to serve standalone markdown content.
  * Overrides DocsBaseURL to point at the /content/ static route
  * so all markdown is fetched from the server's content directory.
+ *
+ * Also registers pict-section-code's bundled demos with the docuserve
+ * Demos provider so they appear under "Demos" in the sidebar when the
+ * user navigates to the pict-section-code module.
  */
 class ContentReaderApplication extends libDocuserveApplication
 {
 	constructor(pFable, pOptions, pServiceHash)
 	{
-		super(pFable, pOptions, pServiceHash);
+		// Pass the host's brand block through to pict-docuserve so the
+		// docs page wears the same wordmark / colors as the main editor.
+		// DocuserveApplication's constructor reads pOptions.Brand and
+		// hands it to Theme-Section.
+		let tmpOptions = Object.assign({}, pOptions || {}, { Brand: libContentSystemBrand });
+		super(pFable, tmpOptions, pServiceHash);
+
+		// Register the canary demos.  Silent no-op if Docuserve-Demos
+		// provider isn't available (older pict-docuserve versions).
+		if (typeof libPictSectionCode.registerWithDocuserve === 'function')
+		{
+			libPictSectionCode.registerWithDocuserve(this.pict);
+		}
 	}
 
 	onAfterInitializeAsync(fCallback)

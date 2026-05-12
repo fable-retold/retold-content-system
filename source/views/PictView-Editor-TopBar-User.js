@@ -75,7 +75,8 @@ const _ViewConfiguration =
 		}
 		.content-editor-user-btn-close,
 		.content-editor-user-btn-docs,
-		.content-editor-user-btn-gear
+		.content-editor-user-btn-gear,
+		.content-editor-user-btn-preview
 		{
 			background: transparent;
 			color: var(--theme-color-text-on-brand, var(--theme-color-text-secondary, #B8AFA4));
@@ -83,12 +84,21 @@ const _ViewConfiguration =
 		}
 		.content-editor-user-btn-close:hover,
 		.content-editor-user-btn-docs:hover,
-		.content-editor-user-btn-gear:hover
+		.content-editor-user-btn-gear:hover,
+		.content-editor-user-btn-preview:hover
 		{
 			color: var(--theme-color-text-on-brand, var(--theme-color-text-primary, #E8E0D4));
 			border-color: var(--theme-color-brand-primary, #8A7F72);
 			background: var(--theme-color-background-hover, rgba(255, 255, 255, 0.05));
 		}
+		.content-editor-user-btn-preview
+		{
+			display: inline-flex;
+			align-items: center;
+			gap: 6px;
+			text-decoration: none;
+		}
+		.content-editor-user-btn-preview svg { width: 14px; height: 14px; flex-shrink: 0; }
 		.content-editor-user-btn-gear
 		{
 			padding: 6px 8px;
@@ -173,6 +183,17 @@ const _ViewConfiguration =
 	<button class="content-editor-user-btn content-editor-user-btn-close"
 		onclick="{~P~}.PictApplication.closeCurrentFile()"
 		{~D:AppData.ContentEditor.CloseVisibilityAttr~}>Close</button>
+	<a class="content-editor-user-btn content-editor-user-btn-preview"
+		href="/preview.html{~D:AppData.ContentEditor.ViewerHash~}" target="_blank" rel="noopener"
+		title="Open this document in the Docuserve preview (new tab)" aria-label="Open in Preview">
+		<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+			stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+			<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+			<polyline points="15 3 21 3 21 9"/>
+			<line x1="10" y1="14" x2="21" y2="3"/>
+		</svg>
+		<span>Preview</span>
+	</a>
 	<button class="content-editor-user-btn content-editor-user-btn-docs" id="ContentEditor-DocsToggle"
 		onclick="{~P~}.views['ContentEditor-Layout'].toggleDocPanel()"
 		title="Toggle documentation panel">Docs</button>
@@ -238,6 +259,21 @@ class ContentEditorTopBarUserView extends libPictView
 		tmpEditor.SaveVisibilityAttr = (tmpEditor.IsDirty || tmpEditor.IsSaving || tmpEditor.SaveStatus)
 			? '' : 'style="display:none"';
 		tmpEditor.CloseVisibilityAttr = tmpEditor.CurrentFile ? '' : 'style="display:none"';
+
+		// Build the Docuserve preview hash so the Preview link in the
+		// template resolves to /preview.html#/page/<doc-path>. Empty
+		// when no file is open (the template still renders the link,
+		// just with an empty fragment). Must NEVER be undefined —
+		// Pict's template parser strips elements whose {~D:~}
+		// interpolation resolves to undefined.
+		if (tmpEditor.CurrentFile)
+		{
+			tmpEditor.ViewerHash = '#/page/' + tmpEditor.CurrentFile.replace(/\.md$/, '');
+		}
+		else
+		{
+			tmpEditor.ViewerHash = '';
+		}
 
 		return super.onBeforeRender(pRenderable, pRenderDestinationAddress, pRecord);
 	}

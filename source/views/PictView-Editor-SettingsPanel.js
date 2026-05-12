@@ -136,16 +136,8 @@ const _ViewConfiguration =
 			Template: /*html*/`
 <div class="content-editor-settings-body">
 	<div class="content-editor-settings-section">
-		<div class="content-editor-settings-label">Appearance</div>
+		<div class="content-editor-settings-label">Theme</div>
 		<div id="ContentEditor-Settings-Theme"></div>
-	</div>
-	<div class="content-editor-settings-divider"></div>
-	<div class="content-editor-settings-section">
-		<a class="content-editor-settings-link"
-			href="/preview.html{~D:AppData.ContentEditor.ViewerHash~}" target="_blank">
-			<svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
-			Docuserve Preview
-		</a>
 	</div>
 	<div class="content-editor-settings-divider"></div>
 	<div class="content-editor-settings-section">
@@ -407,12 +399,27 @@ class ContentEditorSettingsPanelView extends libPictView
 
 		let tmpSelect = this.pict.ContentAssignment.getElement('#ContentEditor-Setting-SegmentDepth');
 		if (tmpSelect && tmpSelect[0]) { tmpSelect[0].disabled = !pChecked; }
+
+		// Re-segment the open document so the editor reflects the new
+		// layout immediately. resegmentCurrentMarkdown preserves unsaved
+		// edits by joining current segment contents and re-splitting.
+		if (this.pict.PictApplication && typeof this.pict.PictApplication.resegmentCurrentMarkdown === 'function')
+		{
+			this.pict.PictApplication.resegmentCurrentMarkdown();
+		}
 	}
 
 	onSegmentDepthChanged(pValue)
 	{
 		this.pict.AppData.ContentEditor.AutoSegmentDepth = parseInt(pValue, 10) || 1;
 		this.pict.PictApplication.saveSettings();
+
+		// Re-segment the open document so the editor reflects the new
+		// depth immediately. Preserves unsaved edits.
+		if (this.pict.PictApplication && typeof this.pict.PictApplication.resegmentCurrentMarkdown === 'function')
+		{
+			this.pict.PictApplication.resegmentCurrentMarkdown();
+		}
 	}
 
 	onAutoPreviewImagesChanged(pChecked)
