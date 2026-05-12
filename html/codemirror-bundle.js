@@ -5801,6 +5801,7 @@ var CodeMirrorModules = (() => {
         );
       let text = new TextTile(composition.text, composition.text.nodeValue);
       text.flags |= 8;
+      this.pos = composition.range.toB;
       head.append(text);
     }
     addInlineWidget(widget, marks2, openStart) {
@@ -7282,7 +7283,7 @@ var CodeMirrorModules = (() => {
     // (including the position after the last piece). For a text tile,
     // these will be character clusters, for a composite tile, these
     // will be child tiles.
-    scan(positions, getRects) {
+    scan(positions, getRects, recursed = false) {
       let lo = 0, hi = positions.length - 1, seen = /* @__PURE__ */ new Set();
       let bidi = this.bidiIn(positions[0], positions[hi]);
       let above, below;
@@ -7337,16 +7338,17 @@ var CodeMirrorModules = (() => {
       if (!closestRect) {
         let side = above && (!below || this.y - above.bottom < below.top - this.y) ? above : below;
         this.y = (side.top + side.bottom) / 2;
-        return this.scan(positions, getRects);
+        return this.scan(positions, getRects, true);
       }
-      if (closestDx) {
-        if (above && above.bottom > closestRect.top) {
+      if (closestDx && !recursed) {
+        let { top: top2, bottom } = closestRect;
+        if (above && above.bottom > (top2 + top2 + bottom) / 3) {
           this.y = above.bottom - 1;
-          return this.scan(positions, getRects);
+          return this.scan(positions, getRects, true);
         }
-        if (below && below.top < closestRect.bottom) {
+        if (below && below.top < (top2 + bottom + bottom) / 3) {
           this.y = below.top + 1;
-          return this.scan(positions, getRects);
+          return this.scan(positions, getRects, true);
         }
       }
       let ltr = (bidi ? this.dirAt(positions[closestI], 1) : this.baseDir) == Direction.LTR;
@@ -8596,7 +8598,7 @@ var CodeMirrorModules = (() => {
     }
     refresh(whiteSpace, lineHeight, charWidth, textHeight, lineLength, knownHeights) {
       let lineWrapping = wrappingWhiteSpace.indexOf(whiteSpace) > -1;
-      let changed = Math.abs(lineHeight - this.lineHeight) > 0.3 || this.lineWrapping != lineWrapping || Math.abs(charWidth - this.charWidth) > 0.1;
+      let changed = Math.abs(lineHeight - this.lineHeight) > 0.3 || this.lineWrapping != lineWrapping;
       this.lineWrapping = lineWrapping;
       this.lineHeight = lineHeight;
       this.charWidth = charWidth;
@@ -9955,7 +9957,7 @@ var CodeMirrorModules = (() => {
       display: "block",
       whiteSpace: "pre",
       wordWrap: "normal",
-      // https://github.com/codemirror/dev/issues/456
+      // Issue #456
       boxSizing: "border-box",
       minHeight: "100%",
       padding: "4px 0",
@@ -10069,7 +10071,7 @@ var CodeMirrorModules = (() => {
     "&light .cm-gutters": {
       backgroundColor: "#f5f5f5",
       color: "#6c6c6c",
-      border: "0px solid var(--theme-color-border-default, #ddd)",
+      border: "0px solid #ddd",
       "&.cm-gutters-before": { borderRightWidth: "1px" },
       "&.cm-gutters-after": { borderLeftWidth: "1px" }
     },
@@ -10155,7 +10157,7 @@ var CodeMirrorModules = (() => {
       userSelect: "none"
     },
     ".cm-highlightSpace": {
-      backgroundImage: "radial-gradient(circle at 50% 55%, var(--theme-color-text-muted, #aaa) 20%, transparent 5%)",
+      backgroundImage: "radial-gradient(circle at 50% 55%, #aaa 20%, transparent 5%)",
       backgroundPosition: "center"
     },
     ".cm-highlightTab": {
@@ -10176,14 +10178,14 @@ var CodeMirrorModules = (() => {
     },
     "&light .cm-button": {
       backgroundImage: "linear-gradient(#eff1f5, #d9d9df)",
-      border: "1px solid var(--theme-color-text-muted, #888)",
+      border: "1px solid #888",
       "&:active": {
         backgroundImage: "linear-gradient(#b4b4b4, #d0d3d6)"
       }
     },
     "&dark .cm-button": {
       backgroundImage: "linear-gradient(#393939, #111)",
-      border: "1px solid var(--theme-color-text-muted, #888)",
+      border: "1px solid #888",
       "&:active": {
         backgroundImage: "linear-gradient(#111, #333)"
       }
@@ -10199,7 +10201,7 @@ var CodeMirrorModules = (() => {
       backgroundColor: "white"
     },
     "&dark .cm-textfield": {
-      border: "1px solid var(--theme-color-text-secondary, #555)",
+      border: "1px solid #555",
       backgroundColor: "inherit"
     }
   }, lightDarkIDs);
@@ -11734,7 +11736,7 @@ var CodeMirrorModules = (() => {
     }
     /**
     Create a theme extension. The first argument can be a
-    [`style-mod`](https://github.com/marijnh/style-mod#documentation)
+    [`style-mod`](https://code.haverbeke.berlin/marijn/style-mod#documentation)
     style spec providing the styles for the theme. These will be
     prefixed with a generated class for the style.
     
@@ -13166,7 +13168,7 @@ var CodeMirrorModules = (() => {
       boxSizing: "border-box"
     },
     "&light .cm-tooltip": {
-      border: "1px solid var(--theme-color-text-muted, #bbb)",
+      border: "1px solid #bbb",
       backgroundColor: "#f5f5f5"
     },
     "&light .cm-tooltip-section:not(:first-child)": {
@@ -13311,11 +13313,13 @@ var CodeMirrorModules = (() => {
       arrow: tooltips.some((t2) => t2.arrow)
     };
   });
+  var hoverPlugin = /* @__PURE__ */ Facet.define();
   var HoverPlugin = class {
-    constructor(view, source, field, setHover, hoverTime) {
+    constructor(view, source, field, locked, setHover, hoverTime) {
       this.view = view;
       this.source = source;
       this.field = field;
+      this.locked = locked;
       this.setHover = setHover;
       this.hoverTime = hoverTime;
       this.hoverTimeout = -1;
@@ -13326,7 +13330,7 @@ var CodeMirrorModules = (() => {
       view.dom.addEventListener("mouseleave", this.mouseleave = this.mouseleave.bind(this));
       view.dom.addEventListener("mousemove", this.mousemove = this.mousemove.bind(this));
     }
-    update() {
+    update(update) {
       if (this.pending) {
         this.pending = null;
         clearTimeout(this.restartTimeout);
@@ -13366,18 +13370,28 @@ var CodeMirrorModules = (() => {
         let rtl = bidi && bidi.dir == Direction.RTL ? -1 : 1;
         side = lastMove.x < posCoords.left ? -rtl : rtl;
       }
+      this.activateHover(view, pos, side);
+    }
+    activateHover(view, pos, side, locked) {
       let open = this.source(view, pos, side);
-      if (open === null || open === void 0 ? void 0 : open.then) {
+      let done = (value) => {
+        if (value && !(Array.isArray(value) && !value.length)) {
+          let tooltips = Array.isArray(value) ? value : [value];
+          if (locked)
+            this.locked.set(tooltips, locked);
+          view.dispatch({ effects: this.setHover.of(tooltips) });
+        }
+      };
+      if (open && "then" in open) {
         let pending = this.pending = { pos };
         open.then((result) => {
           if (this.pending == pending) {
             this.pending = null;
-            if (result && !(Array.isArray(result) && !result.length))
-              view.dispatch({ effects: this.setHover.of(Array.isArray(result) ? result : [result]) });
+            done(result);
           }
         }, (e) => logException(view.state, e, "hover tooltip"));
-      } else if (open && !(Array.isArray(open) && !open.length)) {
-        view.dispatch({ effects: this.setHover.of(Array.isArray(open) ? open : [open]) });
+      } else {
+        done(open);
       }
     }
     get tooltip() {
@@ -13391,7 +13405,7 @@ var CodeMirrorModules = (() => {
       if (this.hoverTimeout < 0)
         this.hoverTimeout = setTimeout(this.checkHover, this.hoverTime);
       let { active, tooltip } = this;
-      if (active.length && tooltip && !isInTooltip(tooltip.dom, event) || this.pending) {
+      if (active.length && !this.locked.has(active) && tooltip && !isInTooltip(tooltip.dom, event) || this.pending) {
         let { pos } = active[0] || this.pending, end = (_b = (_a2 = active[0]) === null || _a2 === void 0 ? void 0 : _a2.end) !== null && _b !== void 0 ? _b : pos;
         if (pos == end ? this.view.posAtCoords(this.lastMove) != pos : !isOverRange(this.view, pos, end, event.clientX, event.clientY)) {
           this.view.dispatch({ effects: this.setHover.of([]) });
@@ -13403,7 +13417,7 @@ var CodeMirrorModules = (() => {
       clearTimeout(this.hoverTimeout);
       this.hoverTimeout = -1;
       let { active } = this;
-      if (active.length) {
+      if (active.length && !this.locked.has(active)) {
         let { tooltip } = this;
         let inTooltip = tooltip && tooltip.dom.contains(event.relatedTarget);
         if (!inTooltip)
@@ -13415,7 +13429,8 @@ var CodeMirrorModules = (() => {
     watchTooltipLeave(tooltip) {
       let watch = (event) => {
         tooltip.removeEventListener("mouseleave", watch);
-        if (this.active.length && !this.view.dom.contains(event.relatedTarget))
+        let { active } = this;
+        if (active.length && !this.locked.has(active) && !this.view.dom.contains(event.relatedTarget))
           this.view.dispatch({ effects: this.setHover.of([]) });
       };
       tooltip.addEventListener("mouseleave", watch);
@@ -13447,56 +13462,78 @@ var CodeMirrorModules = (() => {
   }
   function hoverTooltip(source, options = {}) {
     let setHover = StateEffect.define();
+    let locked = /* @__PURE__ */ new WeakMap();
     let hoverState = StateField.define({
       create() {
         return [];
       },
       update(value, tr) {
+        let lock = locked.get(value);
         if (value.length) {
           if (options.hideOnChange && (tr.docChanged || tr.selection))
             value = [];
+          else if (lock && lock(tr))
+            value = [];
           else if (options.hideOn)
             value = value.filter((v) => !options.hideOn(tr, v));
-          if (tr.docChanged) {
-            let mapped = [];
-            for (let tooltip of value) {
-              let newPos = tr.changes.mapPos(tooltip.pos, -1, MapMode.TrackDel);
-              if (newPos != null) {
-                let copy = Object.assign(/* @__PURE__ */ Object.create(null), tooltip);
-                copy.pos = newPos;
-                if (copy.end != null)
-                  copy.end = tr.changes.mapPos(copy.end);
-                mapped.push(copy);
-              }
+        }
+        if (tr.docChanged && value.length) {
+          let mapped = [];
+          for (let tooltip of value) {
+            let newPos = tr.changes.mapPos(tooltip.pos, -1, MapMode.TrackDel);
+            if (newPos != null) {
+              let copy = Object.assign(/* @__PURE__ */ Object.create(null), tooltip);
+              copy.pos = newPos;
+              if (copy.end != null)
+                copy.end = tr.changes.mapPos(copy.end);
+              mapped.push(copy);
             }
-            value = mapped;
           }
+          value = mapped;
         }
         for (let effect of tr.effects) {
-          if (effect.is(setHover))
+          if (effect.is(setHover)) {
             value = effect.value;
-          if (effect.is(closeHoverTooltipEffect))
+            lock = void 0;
+          }
+          if (effect.is(closeHoverTooltipEffect) && !effect.value || effect.value == hoverState)
             value = [];
         }
+        if (value.length && lock)
+          locked.set(value, lock);
         return value;
       },
       provide: (f) => showHoverTooltip.from(f)
     });
+    const plugin = ViewPlugin.define((view) => new HoverPlugin(
+      view,
+      source,
+      hoverState,
+      locked,
+      setHover,
+      options.hoverTime || 300
+      /* Hover.Time */
+    ));
     return {
       active: hoverState,
       extension: [
         hoverState,
-        ViewPlugin.define((view) => new HoverPlugin(
-          view,
-          source,
-          hoverState,
-          setHover,
-          options.hoverTime || 300
-          /* Hover.Time */
-        )),
+        plugin,
+        hoverPlugin.of(plugin),
         showHoverTooltipHost
       ]
     };
+  }
+  function activateHover(view, pos, side, options = {}) {
+    var _a2;
+    let plugins = view.state.facet(hoverPlugin).map((p) => view.plugin(p)).filter((p) => !!p);
+    if (options.tooltip && options.tooltip.active) {
+      let found = plugins.find((p) => p.field == options.tooltip.active);
+      if (found)
+        plugins = [found];
+    }
+    for (let plugin of plugins)
+      plugin.activateHover(view, pos, side, (_a2 = options.until) !== null && _a2 !== void 0 ? _a2 : (() => false));
   }
   function getTooltip(view, tooltip) {
     let plugin = view.plugin(tooltipPlugin);
@@ -18236,7 +18273,7 @@ var CodeMirrorModules = (() => {
   var baseTheme$12 = /* @__PURE__ */ EditorView.baseTheme({
     ".cm-foldPlaceholder": {
       backgroundColor: "#eee",
-      border: "1px solid var(--theme-color-border-default, #ddd)",
+      border: "1px solid #ddd",
       color: "#888",
       borderRadius: ".2em",
       margin: "0 1px",
@@ -19746,7 +19783,7 @@ var CodeMirrorModules = (() => {
     */
     constructor(text, query, from = 0, to = text.length, normalize, test) {
       this.test = test;
-      this.value = { from: 0, to: 0 };
+      this.value = { from: 0, to: 0, precise: false };
       this.done = false;
       this.matches = [];
       this.buffer = "";
@@ -19794,43 +19831,44 @@ var CodeMirrorModules = (() => {
         this.bufferPos += codePointSize2(next);
         let norm = this.normalize(str);
         if (norm.length)
-          for (let i = 0, pos = start; ; i++) {
+          for (let i = 0, pos = start, posPrecise = true; ; i++) {
             let code = norm.charCodeAt(i);
-            let match = this.match(code, pos, this.bufferPos + this.bufferStart);
-            if (i == norm.length - 1) {
-              if (match) {
-                this.value = match;
-                return this;
-              }
-              break;
+            let match = this.match(code, pos, posPrecise, this.bufferPos + this.bufferStart, i == norm.length - 1);
+            if (match) {
+              this.value = match;
+              return this;
             }
-            if (pos == start && i < str.length && str.charCodeAt(i) == code)
+            if (i == norm.length - 1)
+              break;
+            if (posPrecise && i < str.length && str.charCodeAt(i) == code)
               pos++;
+            else
+              posPrecise = false;
           }
       }
     }
-    match(code, pos, end) {
+    match(code, pos, posPrecise, end, endPrecise) {
       let match = null;
-      for (let i = 0; i < this.matches.length; i += 2) {
-        let index = this.matches[i], keep = false;
-        if (this.query.charCodeAt(index) == code) {
-          if (index == this.query.length - 1) {
-            match = { from: this.matches[i + 1], to: end };
+      for (let i = 0; i < this.matches.length; ) {
+        let partial = this.matches[i], keep = false;
+        if (this.query.charCodeAt(partial.index) == code) {
+          if (partial.index == this.query.length - 1) {
+            match = { from: partial.from, to: end, precise: endPrecise && partial.precise };
           } else {
-            this.matches[i]++;
+            partial.index++;
             keep = true;
           }
         }
-        if (!keep) {
-          this.matches.splice(i, 2);
-          i -= 2;
-        }
+        if (keep)
+          i++;
+        else
+          this.matches.splice(i, 1);
       }
       if (this.query.charCodeAt(0) == code) {
         if (this.query.length == 1)
-          match = { from: pos, to: end };
+          match = { from: pos, to: end, precise: posPrecise && endPrecise };
         else
-          this.matches.push(1, pos);
+          this.matches.push({ from: pos, index: 1, precise: posPrecise });
       }
       if (match && this.test && !this.test(match.from, match.to, this.buffer, this.bufferStart))
         match = null;
@@ -19841,7 +19879,7 @@ var CodeMirrorModules = (() => {
     SearchCursor.prototype[Symbol.iterator] = function() {
       return this;
     };
-  var empty = { from: -1, to: -1, match: /* @__PURE__ */ /.*/.exec("") };
+  var empty = { from: -1, to: -1, match: /* @__PURE__ */ /.*/.exec(""), precise: true };
   var baseFlags = "gm" + (/x/.unicode == null ? "" : "u");
   var RegExpCursor = class {
     /**
@@ -19896,7 +19934,7 @@ var CodeMirrorModules = (() => {
           if (from == this.curLineStart + this.curLine.length)
             this.nextLine();
           if ((from < to || from > this.value.to) && (!this.test || this.test(from, to, match))) {
-            this.value = { from, to, match };
+            this.value = { from, to, precise: true, match };
             return this;
           }
           off = this.matchPos - this.curLineStart;
@@ -19967,7 +20005,7 @@ var CodeMirrorModules = (() => {
         if (match) {
           let from = this.flat.from + match.index, to = from + match[0].length;
           if ((this.flat.to >= this.to || match.index + match[0].length <= this.flat.text.length - 10) && (!this.test || this.test(from, to, match))) {
-            this.value = { from, to, match };
+            this.value = { from, to, precise: true, match };
             this.matchPos = toCharEnd(this.text, to + (from == to ? 1 : 0));
             return this;
           }
@@ -20521,10 +20559,11 @@ var CodeMirrorModules = (() => {
     let next = match;
     let changes = [], selection, replacement;
     let effects = [];
-    if (next.from == from && next.to == to) {
+    if (!next.precise) {
+      next = query.nextMatch(state, next.from, next.to);
+    } else if (next.from == from && next.to == to) {
       replacement = state.toText(query.getReplacement(next));
       changes.push({ from: next.from, to: next.to, insert: replacement });
-      next = query.nextMatch(state, next.from, next.to);
       effects.push(EditorView.announce.of(state.phrase("replaced match on line $", state.doc.lineAt(from).number) + "."));
     }
     let changeSet = view.state.changes(changes);
@@ -20544,10 +20583,12 @@ var CodeMirrorModules = (() => {
   var replaceAll = /* @__PURE__ */ searchCommand((view, { query }) => {
     if (view.state.readOnly)
       return false;
-    let changes = query.matchAll(view.state, 1e9).map((match) => {
-      let { from, to } = match;
-      return { from, to, insert: query.getReplacement(match) };
-    });
+    let changes = [];
+    for (let match of query.matchAll(view.state, 1e9)) {
+      let { from, to, precise } = match;
+      if (precise)
+        changes.push({ from, to, insert: query.getReplacement(match) });
+    }
     if (!changes.length)
       return false;
     let announceText = view.state.phrase("replaced $ matches", changes.length) + ".";
@@ -21218,8 +21259,8 @@ var CodeMirrorModules = (() => {
       let off2 = Math.floor(selected / max);
       return { from: off2 * max, to: (off2 + 1) * max };
     }
-    let off = Math.floor((total - selected) / max);
-    return { from: total - (off + 1) * max, to: total - off * max };
+    let off = Math.ceil((total - selected) / max);
+    return { from: total - off * max, to: total - (off - 1) * max };
   }
   var CompletionTooltip = class {
     constructor(view, stateField, applyCompletion2) {
@@ -22075,7 +22116,8 @@ var CodeMirrorModules = (() => {
       content: '"\xB7\xB7\xB7"',
       opacity: 0.5,
       display: "block",
-      textAlign: "center"
+      textAlign: "center",
+      cursor: "pointer"
     },
     ".cm-tooltip.cm-completionInfo": {
       position: "absolute",
@@ -22831,6 +22873,10 @@ var CodeMirrorModules = (() => {
         return false;
     }
     view.dispatch({ selection: { anchor: next.from, head: next.to }, scrollIntoView: true });
+    activateHover(view, next.from, 1, {
+      tooltip: lintHover,
+      until: (tr) => tr.docChanged || tr.newSelection.main.head < next.from || tr.newSelection.main.head > next.to
+    });
     return true;
   };
   var lintKeymap = [
@@ -23130,7 +23176,7 @@ var CodeMirrorModules = (() => {
       backgroundRepeat: "repeat-x",
       paddingBottom: "0.7px"
     },
-    ".cm-lintRange-error": { backgroundImage: /* @__PURE__ */ underline("#d11") },
+    ".cm-lintRange-error": { backgroundImage: /* @__PURE__ */ underline("#f11") },
     ".cm-lintRange-warning": { backgroundImage: /* @__PURE__ */ underline("orange") },
     ".cm-lintRange-info": { backgroundImage: /* @__PURE__ */ underline("#999") },
     ".cm-lintRange-hint": { backgroundImage: /* @__PURE__ */ underline("#66d") },
@@ -23211,6 +23257,7 @@ var CodeMirrorModules = (() => {
     }
     return sev;
   }
+  var lintHover = /* @__PURE__ */ hoverTooltip(lintTooltip, { hideOn: hideTooltip });
   var lintExtensions = [
     lintState,
     /* @__PURE__ */ EditorView.decorations.compute([lintState], (state) => {
@@ -23219,7 +23266,7 @@ var CodeMirrorModules = (() => {
         activeMark.range(selected.from, selected.to)
       ]);
     }),
-    /* @__PURE__ */ hoverTooltip(lintTooltip, { hideOn: hideTooltip }),
+    lintHover,
     baseTheme5
   ];
 
@@ -25377,6 +25424,8 @@ var CodeMirrorModules = (() => {
       if (dPrec)
         this.score += dPrec;
       if (depth == 0) {
+        if (type < parser5.minRepeatTerm && this.reducePos < this.pos)
+          this.reducePos = this.pos;
         this.pushState(parser5.getGoto(this.state, type, true), this.reducePos);
         if (type < parser5.minRepeatTerm)
           this.storeNode(type, this.reducePos, this.reducePos, lookaheadRecord ? 8 : 4, true);
@@ -25384,7 +25433,10 @@ var CodeMirrorModules = (() => {
         return;
       }
       let base2 = this.stack.length - (depth - 1) * 3 - (action & 262144 ? 6 : 0);
-      let start = base2 ? this.stack[base2 - 2] : this.p.ranges[0].from, size = this.reducePos - start;
+      let start = base2 ? this.stack[base2 - 2] : this.p.ranges[0].from;
+      if (type < parser5.minRepeatTerm && start == this.reducePos && this.reducePos < this.pos)
+        this.reducePos = this.pos;
+      let size = this.reducePos - start;
       if (size >= 2e3 && !((_a2 = this.p.parser.nodeSet.types[type]) === null || _a2 === void 0 ? void 0 : _a2.isAnonymous)) {
         if (start == this.p.lastBigReductionStart) {
           this.p.bigReductionCount++;
@@ -25420,16 +25472,12 @@ var CodeMirrorModules = (() => {
     */
     storeNode(term, start, end, size = 4, mustSink = false) {
       if (term == 0 && (!this.stack.length || this.stack[this.stack.length - 1] < this.buffer.length + this.bufferBase)) {
-        let cur2 = this, top2 = this.buffer.length;
-        if (top2 == 0 && cur2.parent) {
-          top2 = cur2.bufferBase - cur2.parent.bufferBase;
-          cur2 = cur2.parent;
-        }
-        if (top2 > 0 && cur2.buffer[top2 - 4] == 0 && cur2.buffer[top2 - 1] > -1) {
+        let top2 = this.buffer.length;
+        if (top2 > 0 && this.buffer[top2 - 4] == 0 && this.buffer[top2 - 1] > -1) {
           if (start == end)
             return;
-          if (cur2.buffer[top2 - 2] >= start) {
-            cur2.buffer[top2 - 2] = end;
+          if (this.buffer[top2 - 2] >= start) {
+            this.buffer[top2 - 2] = end;
             return;
           }
         }
@@ -25533,6 +25581,8 @@ var CodeMirrorModules = (() => {
     split() {
       let parent = this;
       let off = parent.buffer.length;
+      if (off && parent.buffer[off - 4] == 0)
+        off -= 4;
       while (off > 0 && parent.buffer[off - 2] > parent.reducePos)
         off -= 4;
       let buffer = parent.buffer.slice(off), base2 = parent.bufferBase + off;
