@@ -304,7 +304,7 @@ const _ViewConfiguration =
 		<div class="content-editor-upload-body">
 			<div class="content-editor-upload-dropzone" id="ContentEditor-UploadDropzone"
 				onclick="{~P~}.ContentAssignment.getElement('#ContentEditor-UploadFileInput')[0].click()">
-				<div class="content-editor-upload-dropzone-icon"><svg width="1em" height="1em" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5h2l1.5-2h5L12 5h2a1 1 0 011 1v6a1 1 0 01-1 1H2a1 1 0 01-1-1V6a1 1 0 011-1z"/><circle cx="8" cy="9" r="2.5"/></svg></div>
+				<div class="content-editor-upload-dropzone-icon">{~I:Image~}</div>
 				<div class="content-editor-upload-dropzone-text">Drop an image here or click to browse</div>
 				<div class="content-editor-upload-dropzone-hint">PNG, JPG, GIF, WebP, SVG, BMP</div>
 			</div>
@@ -551,6 +551,14 @@ class ContentEditorLayoutView extends libPictView
 
 	switchSidebarTab(pTab)
 	{
+		// Stash the active tab in AppData so the sidebar-tabs view can
+		// restore it after the modal shell re-renders the tab strip on
+		// every collapsed→expanded transition.  Without this, expanding
+		// the sidebar always lands the user on Files regardless of what
+		// they had selected before collapsing.
+		let tmpEditor = this.pict.AppData.ContentEditor || (this.pict.AppData.ContentEditor = {});
+		tmpEditor.ActiveSidebarTab = pTab;
+
 		let tmpPanes =
 		{
 			files:      this.pict.ContentAssignment.getElement('#ContentEditor-Sidebar-Container')[0],

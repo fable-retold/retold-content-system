@@ -1,6 +1,6 @@
 {
 	"name": "retold-content-system",
-	"version": "1.0.24",
+	"version": "1.0.26",
 	"description": "Retold Content System - Markdown content viewer and editor",
 	"main": "source/Pict-ContentSystem-Bundle.js",
 	"bin": {
@@ -106,10 +106,10 @@
 		"pict-application": "^1.0.34",
 		"pict-provider": "^1.0.13",
 		"pict-provider-theme": "^1.0.0",
-		"pict-provider-vocabulary": "^0.0.7",
+		"pict-provider-vocabulary": "^1.0.0",
 		"pict-section-code": "^1.0.10",
-		"pict-section-content": "^1.0.0",
-		"pict-section-filebrowser": "^1.0.1",
+		"pict-section-content": "^1.0.1",
+		"pict-section-filebrowser": "^1.0.2",
 		"pict-section-inlinedocumentation": "^1.0.0",
 		"pict-section-markdowneditor": "^1.0.15",
 		"pict-section-modal": "^1.0.1",
@@ -125,8 +125,9 @@
 		"codemirror": "^6.0.2",
 		"esbuild": "^0.28.0",
 		"highlight.js": "^11.11.1",
-		"pict-docuserve": "^1.0.0",
-		"quackage": "^1.2.3"
+		"pict-docuserve": "^1.0.1",
+		"quackage": "^1.2.3",
+		"retold-sharp": "^0.0.3"
 	},
 	"copyFilesSettings": {
 		"whenFileExists": "overwrite"
@@ -138,6 +139,10 @@
 		},
 		{
 			"from": "./css/**",
+			"to": "./web-application/css/"
+		},
+		{
+			"from": "./node_modules/pict-docuserve/css/docuserve.css",
 			"to": "./web-application/css/"
 		},
 		{

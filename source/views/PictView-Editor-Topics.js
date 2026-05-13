@@ -309,8 +309,8 @@ const _ViewConfiguration =
     <div class="topics-row-path">{~D:Record.PathDisplay~}</div>
   </div>
   <div class="topics-row-actions">
-    <button class="topics-row-btn" title="Edit" onclick="event.stopPropagation();{~P~}.views['{~D:Record.ViewHash~}'].startEditTopic('{~D:Record.CodeEscaped~}')"><svg width="1em" height="1em" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 1.5l3 3L5 14H2v-3z"/><line x1="9" y1="4" x2="12" y2="7"/></svg></button>
-    <button class="topics-row-btn topics-row-btn-delete" title="Delete" onclick="event.stopPropagation();{~P~}.views['{~D:Record.ViewHash~}'].removeTopic('{~D:Record.CodeEscaped~}')"><svg width="1em" height="1em" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="4" y1="4" x2="12" y2="12"/><line x1="12" y1="4" x2="4" y2="12"/></svg></button>
+    <button class="topics-row-btn" title="Edit" onclick="event.stopPropagation();{~P~}.views['{~D:Record.ViewHash~}'].startEditTopic('{~D:Record.CodeEscaped~}')">{~I:Edit~}</button>
+    <button class="topics-row-btn topics-row-btn-delete" title="Delete" onclick="event.stopPropagation();{~P~}.views['{~D:Record.ViewHash~}'].removeTopic('{~D:Record.CodeEscaped~}')">{~I:Trash~}</button>
     {~D:Record.NavigateButton~}
   </div>
 </div>
@@ -347,7 +347,7 @@ const _ViewConfiguration =
 			Hash: "Topics-Empty-Template",
 			Template: /*html*/`
 <div class="topics-empty">
-  <div class="topics-empty-icon"><svg width="1em" height="1em" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 1h5l4 4v9a1 1 0 01-1 1H4a1 1 0 01-1-1V2a1 1 0 011-1z"/><path d="M9 1v4h4"/><line x1="5" y1="8" x2="11" y2="8"/><line x1="5" y1="11" x2="9" y2="11"/></svg></div>
+  <div class="topics-empty-icon">{~I:FileText~}</div>
   <div>No topics file loaded</div>
   <button class="topics-empty-btn" onclick="{~P~}.views['{~D:Record.ViewHash~}'].loadDefaultTopicsFile()">Load .pict_documentation_topics.json</button>
   <button class="topics-empty-btn topics-empty-btn-secondary" onclick="{~P~}.views['{~D:Record.ViewHash~}'].promptSelectTopicsFile()">Select file...</button>
@@ -806,7 +806,7 @@ class ContentEditorTopicsView extends libPictView
 			let tmpNavigateBtnHTML = '';
 			if (tmpTopic.TopicHelpFilePath)
 			{
-				tmpNavigateBtnHTML = '<button class="topics-row-btn" title="Go to file" onclick="event.stopPropagation();' + tmpViewRef + '.navigateToTopic(\'' + tmpAttrEscaped + '\')"><svg width="1em" height="1em" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="8" x2="13" y2="8"/><polyline points="9,4 13,8 9,12"/></svg></button>';
+				tmpNavigateBtnHTML = '<button class="topics-row-btn" title="Go to file" onclick="event.stopPropagation();' + tmpViewRef + '.navigateToTopic(\'' + tmpAttrEscaped + '\')">' + this.pict.icon('ArrowRight') + '</button>';
 			}
 
 			let tmpRecord =

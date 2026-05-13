@@ -210,7 +210,7 @@ const _ViewConfiguration =
 	onclick="{~P~}.PictApplication.cancelCloseFile()">
 	<div class="content-editor-confirm-panel" onclick="event.stopPropagation()">
 		<div class="content-editor-confirm-body">
-			<div class="content-editor-confirm-icon"><svg width="1em" height="1em" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 1L1 14h14z"/><line x1="8" y1="6" x2="8" y2="9"/><circle cx="8" cy="11.5" r="0.5" fill="currentColor" stroke="none"/></svg></div>
+			<div class="content-editor-confirm-icon">{~I:Warning~}</div>
 			<div class="content-editor-confirm-title">Unsaved Changes</div>
 			<div class="content-editor-confirm-message">
 				This file has unsaved changes.<br>Close without saving?

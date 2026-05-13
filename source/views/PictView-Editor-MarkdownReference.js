@@ -472,7 +472,7 @@ const _ViewConfiguration =
 			Template: /*html*/`
 <div class="md-ref-container">
 	<div class="md-ref-docs-link">
-		<span><svg width="1em" height="1em" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3C6.5 1.5 4 1 1 1.5v11c3-.5 5.5 0 7 1.5 1.5-1.5 4-2 7-1.5v-11c-3-.5-5.5 0-7 1.5z"/><line x1="8" y1="3" x2="8" y2="14"/></svg></span>
+		<span>{~I:FileText~}</span>
 		<a href="#" onclick="event.preventDefault();pict.views['ContentEditor-Layout'].toggleDocPanel()">Full Documentation</a>
 	</div>
 	<div class="md-ref-search-bar">
@@ -483,9 +483,9 @@ const _ViewConfiguration =
 			onkeydown="{~P~}.views['ContentEditor-MarkdownReference'].onSearchKeydown(event)">
 		<span class="md-ref-search-count" id="ContentEditor-MdRef-SearchCount"></span>
 		<button class="md-ref-search-nav" id="ContentEditor-MdRef-SearchPrev"
-			onclick="{~P~}.views['ContentEditor-MarkdownReference'].navigateMatch(-1)" disabled>&#x25B2;</button>
+			onclick="{~P~}.views['ContentEditor-MarkdownReference'].navigateMatch(-1)" disabled>{~I:ChevronUp~}</button>
 		<button class="md-ref-search-nav" id="ContentEditor-MdRef-SearchNext"
-			onclick="{~P~}.views['ContentEditor-MarkdownReference'].navigateMatch(1)" disabled>&#x25BC;</button>
+			onclick="{~P~}.views['ContentEditor-MarkdownReference'].navigateMatch(1)" disabled>{~I:ChevronDown~}</button>
 	</div>
 	<div class="md-ref-content" id="ContentEditor-MdRef-Content">
 ` + _MarkdownReferenceContent + `

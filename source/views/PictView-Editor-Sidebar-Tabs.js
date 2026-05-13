@@ -157,20 +157,54 @@ class ContentEditorSidebarTabsView extends libPictView
 	{
 		this.pict.CSSMap.injectCSS();
 
-		// Re-render the child pane views into their now-existing
-		// destinations. The Files tab is the default active pane on
-		// first render; the others are display:none until the user
-		// switches to them (their views are lazy-rendered on first
-		// switch — see Layout.switchSidebarTab).
-		let tmpFB = this.pict.views['Pict-FileBrowser'];
-		if (tmpFB && typeof tmpFB.render === 'function')
+		// Re-render every child view into its (just-recreated) tab pane.
+		//
+		// This view IS the sidebar panel's bound ContentView, which means
+		// the modal shell auto-re-renders this template on every
+		// collapsed→expanded transition.  Each re-render replaces the
+		// four empty tab-pane containers; any child view that had
+		// previously painted into one of them needs to be told to
+		// repaint, or its tab goes blank.
+		//
+		// Order matters: the FileBrowser shell must render BEFORE
+		// FileBrowser-ListDetail because the latter paints into a
+		// container the former creates (#Pict-FileBrowser-ListPane).
+		// Topics, Vocabulary, and MarkdownReference are independent.
+		//
+		// Each call is wrapped so a single view's render failure doesn't
+		// take down the rest — a tab going blank for one reason is
+		// recoverable; a tab going blank because another tab threw is
+		// not.
+		let tmpRerender = (pHash) =>
 		{
-			try { tmpFB.render(); } catch (pErr) { /* swallow */ }
-		}
-		let tmpVocab = this.pict.views['ContentEditor-Vocabulary'];
-		if (tmpVocab && typeof tmpVocab.render === 'function')
+			let tmpView = this.pict.views[pHash];
+			if (tmpView && typeof tmpView.render === 'function')
+			{
+				try { tmpView.render(); } catch (pErr) { /* swallow */ }
+			}
+		};
+		tmpRerender('Pict-FileBrowser');                 // shell (sets up panes)
+		tmpRerender('Pict-FileBrowser-ListDetail');      // file list (paints into shell)
+		tmpRerender('ContentEditor-MarkdownReference');
+		tmpRerender('ContentEditor-Topics');
+		tmpRerender('ContentEditor-Vocabulary');
+
+		// Restore the previously-active tab.  The shell template
+		// hardcodes `active` on the Files button (default first-mount
+		// state), so every re-render — including the one that fires on
+		// every collapsed→expanded transition — visually resets the
+		// user back to Files.  Reading the saved tab from AppData and
+		// calling the layout's switchSidebarTab() flips the active
+		// class + display:none/block pair to where the user left them.
+		let tmpSaved = this.pict.AppData.ContentEditor
+			&& this.pict.AppData.ContentEditor.ActiveSidebarTab;
+		if (tmpSaved && tmpSaved !== 'files')
 		{
-			try { tmpVocab.render(); } catch (pErr) { /* swallow */ }
+			let tmpLayout = this.pict.views['ContentEditor-Layout'];
+			if (tmpLayout && typeof tmpLayout.switchSidebarTab === 'function')
+			{
+				try { tmpLayout.switchSidebarTab(tmpSaved); } catch (pErr) { /* swallow */ }
+			}
 		}
 
 		return super.onAfterRender(pRenderable, pRenderDestinationAddress, pRecord, pContent);
