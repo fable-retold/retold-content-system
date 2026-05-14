@@ -142,10 +142,6 @@
 			"to": "./web-application/css/"
 		},
 		{
-			"from": "./node_modules/pict-docuserve/css/docuserve.css",
-			"to": "./web-application/css/"
-		},
-		{
 			"from": "./node_modules/pict/dist/pict.min.js",
 			"to": "./web-application/js/"
 		},

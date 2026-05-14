@@ -1,0 +1,18 @@
+{
+	"Hash": "retold-content-system",
+	"Name": "Retold Content",
+	"Tagline": "Author content for the Retold ecosystem",
+	"Palette": "desert",
+	"Icon": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 96 96\" width=\"96\" height=\"96\">\n\t\t<defs>\n\t\t\t<clipPath id=\"frame-retold-content-system-filled-light\">\n\t\t\t\t<path d=\"M 2 48\n\t\t\tA 46 46 0 1 0 94 48\n\t\t\tA 46 46 0 1 0 2 48 Z\"/>\n\t\t\t</clipPath>\n\t\t</defs>\n\t\t<path d=\"M 2 48\n\t\t\tA 46 46 0 1 0 94 48\n\t\t\tA 46 46 0 1 0 2 48 Z\" fill=\"#c95a25\"/>\n\t\t<g clip-path=\"url(#frame-retold-content-system-filled-light)\"><rect x=\"26\" y=\"14\" width=\"18\" height=\"68\" rx=\"4\" fill=\"rgba(255,255,255,0.18)\"/><rect x=\"52\" y=\"14\" width=\"18\" height=\"68\" rx=\"4\" fill=\"#5ed0b1\"/></g>\n\t\t<text x=\"48\" y=\"50\" text-anchor=\"middle\" dominant-baseline=\"central\"\n\t\t\tfont-family=\"-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif\"\n\t\t\tfont-size=\"28\" font-weight=\"700\"\n\t\t\tfill=\"#ffffff\" letter-spacing=\"-1\">RCS</text>\n\t</svg>",
+	"IconType": "svg",
+	"Favicon": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 96 96\" width=\"96\" height=\"96\">\n\t\t<defs>\n\t\t\t<clipPath id=\"fav-retold-content-system-light\">\n\t\t\t\t<path d=\"M 2 48\n\t\t\tA 46 46 0 1 0 94 48\n\t\t\tA 46 46 0 1 0 2 48 Z\"/>\n\t\t\t</clipPath>\n\t\t</defs>\n\t\t<path d=\"M 2 48\n\t\t\tA 46 46 0 1 0 94 48\n\t\t\tA 46 46 0 1 0 2 48 Z\" fill=\"#c95a25\"/>\n\t\t<g clip-path=\"url(#fav-retold-content-system-light)\"><rect x=\"20\" y=\"14\" width=\"56\" height=\"68\" rx=\"4\" fill=\"rgba(255,255,255,0.22)\"/></g>\n\t\t<text x=\"48\" y=\"50\" text-anchor=\"middle\" dominant-baseline=\"central\"\n\t\t\tfont-family=\"-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif\"\n\t\t\tfont-size=\"60\" font-weight=\"800\"\n\t\t\tfill=\"#ffffff\" letter-spacing=\"-1\">R</text>\n\t</svg>",
+	"FaviconDark": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 96 96\" width=\"96\" height=\"96\">\n\t\t<defs>\n\t\t\t<clipPath id=\"fav-retold-content-system-dark\">\n\t\t\t\t<path d=\"M 2 48\n\t\t\tA 46 46 0 1 0 94 48\n\t\t\tA 46 46 0 1 0 2 48 Z\"/>\n\t\t\t</clipPath>\n\t\t</defs>\n\t\t<path d=\"M 2 48\n\t\t\tA 46 46 0 1 0 94 48\n\t\t\tA 46 46 0 1 0 2 48 Z\" fill=\"#de916d\"/>\n\t\t<g clip-path=\"url(#fav-retold-content-system-dark)\"><rect x=\"20\" y=\"14\" width=\"56\" height=\"68\" rx=\"4\" fill=\"rgba(255,255,255,0.22)\"/></g>\n\t\t<text x=\"48\" y=\"50\" text-anchor=\"middle\" dominant-baseline=\"central\"\n\t\t\tfont-family=\"-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif\"\n\t\t\tfont-size=\"60\" font-weight=\"800\"\n\t\t\tfill=\"#101418\" letter-spacing=\"-1\">R</text>\n\t</svg>",
+	"Colors": {
+		"Primary": "#c95a25",
+		"Secondary": "#5ed0b1",
+		"PrimaryLight": "#c95a25",
+		"PrimaryDark": "#de916d",
+		"SecondaryLight": "#5ed0b1",
+		"SecondaryDark": "#a8e1d2"
+	}
+}
