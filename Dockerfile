@@ -6,7 +6,7 @@
 # gitignored per the Quackage convention. See BUILDING-AND-PUBLISHING.md.
 
 # Stage 1: Build the bundled web application
-FROM node:20-slim AS builder
+FROM node:22-slim AS builder
 WORKDIR /app
 COPY package.json ./
 RUN npm install
@@ -22,7 +22,7 @@ COPY build/ build/
 RUN npx quack build && npx quack copy
 
 # Stage 2: Runtime — production deps only, build artifacts copied over
-FROM node:20-slim
+FROM node:22-slim
 WORKDIR /app
 COPY package.json ./
 RUN npm install --omit=dev
