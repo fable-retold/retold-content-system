@@ -19,6 +19,13 @@ const libPictSectionTheme = require('pict-section-theme');
 // Content rendering
 const libPictSectionContent = require('pict-section-content');
 
+// Login section + beacon-side auth helper (opt-in via the ultravisor-
+// beacon SDK).  When the upstream UV is in non-promiscuous mode the
+// helper's boot gate forces the user through a login overlay before
+// the editor shell becomes interactive.
+const libPictSectionLogin = require('pict-section-login');
+const libBeaconWebAuthClient = require('ultravisor-beacon/webinterface/Pict-Beacon-WebAuth-Client.js');
+
 // Provider
 const libContentEditorProvider = require('./providers/Pict-Provider-ContentEditor.js');
 
@@ -27,6 +34,7 @@ const libContentSystemBrand = require('./ContentSystem-Brand.js');
 
 // Views
 const libViewLayout = require('./views/PictView-Editor-Layout.js');
+const libViewLogin = require('./views/PictView-Editor-Login.js');
 const libViewSidebarTabs = require('./views/PictView-Editor-Sidebar-Tabs.js');
 const libViewTopBarNav = require('./views/PictView-Editor-TopBar-Nav.js');
 const libViewTopBarUser = require('./views/PictView-Editor-TopBar-User.js');
@@ -142,6 +150,29 @@ class ContentEditorApplication extends libPictApplication
 		this.pict.addView('ContentEditor-SettingsPanel', libViewSettingsPanel.default_configuration, libViewSettingsPanel);
 		this.pict.addView('ContentEditor-MarkdownReference', libViewMarkdownReference.default_configuration, libViewMarkdownReference);
 		this.pict.addView('ContentEditor-Topics', libViewTopics.default_configuration, libViewTopics);
+		this.pict.addView('ContentEditor-Login', libViewLogin.default_configuration, libViewLogin);
+
+		// Beacon-side login section + boot-gate helper.  See
+		// ultravisor-beacon/webinterface/Pict-Beacon-WebAuth-Client.js
+		// for the contract.  The helper hooks
+		// onLoginSuccess/onLogout/onSessionChecked back into
+		// `_showLoginOverlay()` / `_hideLoginOverlay()` which toggle
+		// the fixed-position overlay div mounted in
+		// onAfterInitializeAsync.
+		this._WebAuthClient = libBeaconWebAuthClient.install(this.pict,
+			{
+				Section:              libPictSectionLogin,
+				AuthStateAddress:     'AppData.ContentEditor.Auth',
+				LoginRoute:           'ContentEditor-Login',
+				HomeRoute:            'ContentEditor-Layout',
+				StatusURL:            '/status',
+				LoginEndpoint:        '/1.0/Authenticate',
+				LogoutEndpoint:       '/1.0/Deauthenticate',
+				CheckSessionEndpoint: '/1.0/CheckSession',
+				OnAfterLogin:         () => this._hideLoginOverlay(),
+				OnAfterLogout:        () => this._showLoginOverlay(),
+				OnSessionChecked:     (pSess) => { if (!(pSess && pSess.LoggedIn)) { this._showLoginOverlay(); } else { this._hideLoginOverlay(); } }
+			});
 
 		// Register the file browser -- override destination and layout for sidebar use
 		let tmpFileBrowserConfig = JSON.parse(JSON.stringify(libPictSectionFileBrowser.default_configuration));
@@ -247,8 +278,31 @@ class ContentEditorApplication extends libPictApplication
 		// Restore persisted settings from localStorage
 		this._loadSettings();
 
+		// Make sure the login overlay mount point exists before any
+		// render path on the wrapper view touches it.
+		this._ensureLoginOverlayMount();
+
 		// Render the layout shell
 		this.pict.views['ContentEditor-Layout'].render();
+
+		// Boot gate: poll /status to learn the UV's auth mode.  In
+		// authenticated mode show the overlay; pict-section-login's
+		// CheckSessionOnLoad will hide it again if there's a valid
+		// cookie.  Failure is non-fatal — defaults leave us in
+		// promiscuous mode and the editor is fully interactive.
+		this._WebAuthClient.loadAuthStatus((pStatusErr) =>
+			{
+				if (pStatusErr)
+				{
+					this.pict.log.warn('ContentEditor: /status fetch failed during boot: ' + pStatusErr.message);
+				}
+				let tmpAuth = (this.pict.AppData.ContentEditor && this.pict.AppData.ContentEditor.Auth) || {};
+				if (tmpAuth.Mode === 'authenticated')
+				{
+					this._showLoginOverlay();
+					this.pict.views['ContentEditor-Login'].render();
+				}
+			});
 
 		// Wire up file selection from the file browser
 		let tmpSelf = this;
@@ -1809,6 +1863,32 @@ class ContentEditorApplication extends libPictApplication
 		{
 			this.log.warn('Failed to load settings: ' + pError.message);
 		}
+	}
+
+	// ── Login overlay (boot gate) ───────────────────────────────────────
+	/**
+	 * Append `<div id="ContentEditor-Login-Overlay">` to <body> once at
+	 * boot so the wrapper view has a stable mount point.  Idempotent.
+	 */
+	_ensureLoginOverlayMount()
+	{
+		if (typeof document === 'undefined') { return; }
+		if (document.getElementById('ContentEditor-Login-Overlay')) { return; }
+		let tmpDiv = document.createElement('div');
+		tmpDiv.id = 'ContentEditor-Login-Overlay';
+		document.body.appendChild(tmpDiv);
+	}
+
+	_showLoginOverlay()
+	{
+		let tmpEl = (typeof document !== 'undefined') && document.getElementById('ContentEditor-Login-Overlay');
+		if (tmpEl) { tmpEl.classList.add('is-active'); }
+	}
+
+	_hideLoginOverlay()
+	{
+		let tmpEl = (typeof document !== 'undefined') && document.getElementById('ContentEditor-Login-Overlay');
+		if (tmpEl) { tmpEl.classList.remove('is-active'); }
 	}
 }
 

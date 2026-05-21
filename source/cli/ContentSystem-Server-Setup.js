@@ -845,6 +845,34 @@ function _initializeBeacon(pFable, pContentPath, pBeaconConfig)
 		else
 		{
 			pFable.log.info('Content System Beacon: enabled and connected to Ultravisor.');
+			// After the beacon registers successfully, mount the WebAuth
+			// proxy on the content-system's Orator server so the web UI
+			// can login through UV.  Non-fatal — content editing still
+			// works if the install fails for any reason.
+			try
+			{
+				if (libBeaconService.WebAuth && pFable.OratorServiceServer)
+				{
+					libBeaconService.WebAuth.install(pFable.OratorServiceServer,
+						{
+							UltravisorURL:     pBeaconConfig.ServerURL,
+							BeaconName:        pBeaconConfig.Name || 'retold-content-system',
+							BeaconID:          () => (tmpBeacon && tmpBeacon.getBeaconID && tmpBeacon.getBeaconID()) || '',
+							CookieName:        'SessionID',
+							RoutePrefix:       '/1.0/',
+							StatusPath:        '/status',
+							// Gate file-mutation endpoints (read/write/list).
+							// Static UI + auth routes stay public.
+							GatedPathPrefixes: ['/1.0/Files', '/1.0/File', '/1.0/Folders'],
+							Log:               pFable.log
+						});
+					pFable.log.info('Content System Beacon: WebAuth mounted /1.0/{Authenticate,Deauthenticate,CheckSession} + /status proxy');
+				}
+			}
+			catch (pWebAuthErr)
+			{
+				pFable.log.warn(`Content System Beacon: WebAuth install skipped: ${pWebAuthErr && pWebAuthErr.message}`);
+			}
 		}
 	});
 }
