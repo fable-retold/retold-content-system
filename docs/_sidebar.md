@@ -17,11 +17,11 @@
 
 - Retold Ecosystem
 
-  - [Pict](/pict/pict/)
-  - [Pict Application](/pict/pict-application/)
-  - [Pict Docuserve](/pict/pict-docuserve/)
-  - [Pict Section Markdown Editor](/pict/pict-section-markdowneditor/)
-  - [Pict Section Code](/pict/pict-section-code/)
-  - [Pict Section File Browser](/pict/pict-section-filebrowser/)
-  - [Orator](/orator/orator/)
-  - [Fable](/fable/fable/)
+  - [Pict](https://stevenvelozo.github.io/pict/)
+  - [Pict Application](https://stevenvelozo.github.io/pict-application/)
+  - [Pict Docuserve](https://stevenvelozo.github.io/pict-docuserve/)
+  - [Pict Section Markdown Editor](https://stevenvelozo.github.io/pict-section-markdowneditor/)
+  - [Pict Section Code](https://stevenvelozo.github.io/pict-section-code/)
+  - [Pict Section File Browser](https://stevenvelozo.github.io/pict-section-filebrowser/)
+  - [Orator](https://stevenvelozo.github.io/orator/)
+  - [Fable](https://stevenvelozo.github.io/fable/)
