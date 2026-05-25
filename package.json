@@ -19,7 +19,6 @@
 	"scripts": {
 		"start": "node source/cli/ContentSystem-CLI-Run.js serve",
 		"brand": "node node_modules/pict-section-theme/bin/pict-section-theme-brand.js --manifest ../../../Retold-Modules-Manifest.json --module retold-content-system --favicons web-application/favicons",
-		"prebuild": "npm run brand",
 		"build": "npx quack build && npx quack copy",
 		"build-codemirror": "node build/build-codemirror-bundle.js",
 		"build-codejar": "node build/build-codejar-bundle.js",
@@ -119,18 +118,17 @@
 		"ultravisor-beacon": "^1.0.1"
 	},
 	"devDependencies": {
-		"chai": "^4.5.0",
-		"mocha": "^10.4.0",
 		"@codemirror/lang-markdown": "^6.5.0",
 		"@codemirror/state": "^6.6.0",
 		"@codemirror/view": "^6.41.0",
+		"chai": "^4.5.0",
 		"codejar": "^4.3.0",
 		"codemirror": "^6.0.2",
 		"esbuild": "^0.28.0",
 		"highlight.js": "^11.11.1",
+		"mocha": "^10.4.0",
 		"pict-docuserve": "^1.4.1",
-		"quackage": "^1.2.4",
-		"retold-sharp": "^1.0.0"
+		"quackage": "^1.2.4"
 	},
 	"copyFilesSettings": {
 		"whenFileExists": "overwrite"
