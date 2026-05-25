@@ -267,9 +267,19 @@ function setupContentSystemServer(pOptions, fCallback)
 						}
 
 						let tmpContent = '';
+						let tmpBinaryEncoding = null;
 						if (pRequest.body && typeof (pRequest.body) === 'object' && pRequest.body.Content !== undefined)
 						{
 							tmpContent = pRequest.body.Content;
+							// Optional binary-save hint used by pict-section-excalidraw
+							// (and any other client) to write images / non-text
+							// blobs through the same endpoint.  When set to
+							// 'base64', the Content field is decoded before
+							// being written as a raw binary buffer.
+							if (pRequest.body.BinaryEncoding === 'base64')
+							{
+								tmpBinaryEncoding = 'base64';
+							}
 						}
 						else if (typeof (pRequest.body) === 'string')
 						{
@@ -283,10 +293,21 @@ function setupContentSystemServer(pOptions, fCallback)
 							libFs.mkdirSync(tmpDir, { recursive: true });
 						}
 
-						libFs.writeFileSync(tmpFullPath, tmpContent, 'utf8');
+						let tmpWrittenSize;
+						if (tmpBinaryEncoding === 'base64')
+						{
+							let tmpBuf = Buffer.from(tmpContent, 'base64');
+							libFs.writeFileSync(tmpFullPath, tmpBuf);
+							tmpWrittenSize = tmpBuf.length;
+						}
+						else
+						{
+							libFs.writeFileSync(tmpFullPath, tmpContent, 'utf8');
+							tmpWrittenSize = tmpContent.length;
+						}
 
-						tmpFable.log.info(`Content saved: ${tmpFilePath} (${tmpContent.length} bytes)`);
-						pResponse.send({ Success: true, Path: tmpFilePath, Size: tmpContent.length });
+						tmpFable.log.info(`Content saved: ${tmpFilePath} (${tmpWrittenSize} bytes${tmpBinaryEncoding ? ', binary' : ''})`);
+						pResponse.send({ Success: true, Path: tmpFilePath, Size: tmpWrittenSize });
 					}
 					catch (pError)
 					{

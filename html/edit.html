@@ -11,12 +11,20 @@
 		<link href="css/content-system.css" rel="stylesheet">
 		<!-- KaTeX stylesheet for LaTeX equation rendering -->
 		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/katex.min.css">
+		<!-- Excalidraw wrapper stylesheet (vendored from pict-section-excalidraw) -->
+		<link rel="stylesheet" href="./css/excalidraw-wrapper.css">
 		<!-- PICT Dynamic View CSS Container -->
 		<style id="PICT-CSS"></style>
 		<!-- CodeMirror bundle (sets window.CodeMirrorModules) -->
 		<script src="./codemirror-bundle.js" type="text/javascript"></script>
 		<!-- CodeJar + highlight.js bundle (sets window.CodeJarModules) -->
 		<script src="./codejar-bundle.js" type="text/javascript"></script>
+		<!-- Excalidraw vendor: React + ReactDOM as window globals, then the
+		     Excalidraw wrapper (which sets window.PictSectionExcalidrawVendor).
+		     Drives .excalidraw.svg + .excalidraw.json editing inside the
+		     content tree. -->
+		<script src="./js/react-vendor.min.js" type="text/javascript"></script>
+		<script src="./js/excalidraw-wrapper.min.js" type="text/javascript"></script>
 		<!-- Pict framework -->
 		<script src="./js/pict.min.js" type="text/javascript"></script>
 		<script type="text/javascript">

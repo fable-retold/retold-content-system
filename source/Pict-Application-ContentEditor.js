@@ -40,6 +40,7 @@ const libViewTopBarNav = require('./views/PictView-Editor-TopBar-Nav.js');
 const libViewTopBarUser = require('./views/PictView-Editor-TopBar-User.js');
 const libViewMarkdownEditor = require('./views/PictView-Editor-MarkdownEditor.js');
 const libViewCodeEditor = require('./views/PictView-Editor-CodeEditor.js');
+const libViewExcalidrawEditor = require('./views/PictView-Editor-ExcalidrawEditor.js');
 const libViewSettingsPanel = require('./views/PictView-Editor-SettingsPanel.js');
 const libViewMarkdownReference = require('./views/PictView-Editor-MarkdownReference.js');
 const libViewTopics = require('./views/PictView-Editor-Topics.js');
@@ -147,6 +148,7 @@ class ContentEditorApplication extends libPictApplication
 
 		this.pict.addView('ContentEditor-MarkdownEditor', libViewMarkdownEditor.default_configuration, libViewMarkdownEditor);
 		this.pict.addView('ContentEditor-CodeEditor', libViewCodeEditor.default_configuration, libViewCodeEditor);
+		this.pict.addView('ContentEditor-ExcalidrawEditor', libViewExcalidrawEditor.default_configuration, libViewExcalidrawEditor);
 		this.pict.addView('ContentEditor-SettingsPanel', libViewSettingsPanel.default_configuration, libViewSettingsPanel);
 		this.pict.addView('ContentEditor-MarkdownReference', libViewMarkdownReference.default_configuration, libViewMarkdownReference);
 		this.pict.addView('ContentEditor-Topics', libViewTopics.default_configuration, libViewTopics);
@@ -208,7 +210,7 @@ class ContentEditorApplication extends libPictApplication
 			if (tmpListDetailConfig.Templates[i].Hash === 'FileBrowser-ListDetail-Row-Template')
 			{
 				tmpListDetailConfig.Templates[i].Template = /*html*/`
-<div class="pict-fb-detail-row{~D:Record.SelectedClass~}" data-index="{~D:Record.Index~}" data-name="{~D:Record.Name~}" onclick="{~D:Record.ClickHandler~}" ondblclick="{~D:Record.DblClickHandler~}">
+<div class="pict-fb-detail-row{~D:Record.SelectedClass~}" data-index="{~D:Record.Index~}" data-name="{~D:Record.Name~}" onclick="{~P~}.views['{~D:Record.ViewHash~}'].selectEntry({~D:Record.Index~})" ondblclick="{~P~}.views['{~D:Record.ViewHash~}'].openEntry({~D:Record.Index~})">
 	<span class="pict-fb-detail-icon">{~D:Record.Icon~}</span>
 	<span class="pict-fb-detail-name">{~D:Record.Name~}</span>
 	<span class="pict-fb-detail-size">{~D:Record.SizeFormatted~}</span>
@@ -545,6 +547,18 @@ class ContentEditorApplication extends libPictApplication
 		{
 			return 'markdown';
 		}
+		// 2-file Excalidraw naming: <stem>.excalidraw.svg + <stem>.excalidraw.json
+		// share the `.excalidraw.` infix so we can route on filename alone
+		// without sniffing file content.  Plain `.svg` and `.json` files fall
+		// through to binary preview / code editor respectively, which is what
+		// users expect for logos, icons, and configuration files.
+		let tmpLowerPath = pFilePath.toLowerCase();
+		if (tmpLowerPath.endsWith('.excalidraw.svg') ||
+			tmpLowerPath.endsWith('.excalidraw.json') ||
+			tmpLowerPath.endsWith('.excalidraw'))
+		{
+			return 'excalidraw';
+		}
 
 		// Known binary / non-editable file extensions
 		let tmpBinaryExtensions =
@@ -583,6 +597,22 @@ class ContentEditorApplication extends libPictApplication
 	 * Tear down whichever editor is currently active so the container
 	 * is clean before showing a different view.
 	 */
+	/**
+	 * Common routing path to the Excalidraw editor.  Both `.excalidraw.svg`
+	 * and `.excalidraw.json` open the same scene — the editor view derives
+	 * the sibling path internally on save.
+	 *
+	 * @param {string} pFilePath
+	 */
+	_routeToExcalidrawEditor(pFilePath)
+	{
+		let tmpExcView = this.pict.views['ContentEditor-ExcalidrawEditor'];
+		if (!tmpExcView) return;
+		tmpExcView.initialRenderComplete = false;
+		tmpExcView.bindToFile(pFilePath);
+		tmpExcView.render();
+	}
+
 	_cleanupEditors()
 	{
 		let tmpCodeEditorView = this.pict.views['ContentEditor-CodeEditor'];
@@ -594,6 +624,12 @@ class ContentEditorApplication extends libPictApplication
 			}
 			// Always reset so the next render() triggers onAfterInitialRender
 			tmpCodeEditorView.initialRenderComplete = false;
+		}
+
+		let tmpExcView = this.pict.views['ContentEditor-ExcalidrawEditor'];
+		if (tmpExcView && typeof tmpExcView.destroy === 'function' && tmpExcView._reactRoot)
+		{
+			tmpExcView.destroy();
 		}
 
 		// Clear the container
@@ -947,10 +983,25 @@ class ContentEditorApplication extends libPictApplication
 		// Re-render top bar
 		this.renderTopBar();
 
-		// Binary files: show preview card without loading content
+		// Binary files: show preview card without loading content.  Plain
+		// `.svg` files (icons, logos, screenshots) live here — only files
+		// matching the `.excalidraw.svg` naming convention route to the
+		// Excalidraw editor, and that decision was already made by
+		// getEditorTypeForFile above.
 		if (tmpEditorType === 'binary')
 		{
 			this._showBinaryPreview(pFilePath);
+			this.updateStats();
+			return;
+		}
+
+		// Excalidraw files (`.excalidraw.svg`, `.excalidraw.json`, or the
+		// legacy bare `.excalidraw`): hand off to the embedded drawing
+		// editor.  The view manages its own load/save through the content
+		// provider, so we don't need to fetch content here.
+		if (tmpEditorType === 'excalidraw')
+		{
+			this._routeToExcalidrawEditor(pFilePath);
 			this.updateStats();
 			return;
 		}
@@ -1054,6 +1105,46 @@ class ContentEditorApplication extends libPictApplication
 
 		let tmpContent = '';
 		let tmpActiveEditor = this.pict.AppData.ContentEditor.ActiveEditor;
+
+		// Excalidraw editor handles its own save path (writes JSON + SVG
+		// sidecar) — short-circuit the markdown/code marshaling logic.
+		if (tmpActiveEditor === 'excalidraw')
+		{
+			let tmpExcView = this.pict.views['ContentEditor-ExcalidrawEditor'];
+			if (!tmpExcView) return;
+			let tmpSelfX = this;
+			this.pict.AppData.ContentEditor.IsSaving = true;
+			this.pict.AppData.ContentEditor.SaveStatus = 'Saving...';
+			this.pict.AppData.ContentEditor.SaveStatusClass = 'content-editor-status-saving';
+			this.renderTopBar();
+			tmpExcView.saveToContent((pErr) =>
+			{
+				tmpSelfX.pict.AppData.ContentEditor.IsSaving = false;
+				if (pErr)
+				{
+					tmpSelfX.pict.AppData.ContentEditor.SaveStatus = 'Error: ' + pErr.message;
+					tmpSelfX.pict.AppData.ContentEditor.SaveStatusClass = 'content-editor-status-error';
+				}
+				else
+				{
+					tmpSelfX.pict.AppData.ContentEditor.IsDirty = false;
+					tmpSelfX.pict.AppData.ContentEditor.SaveStatus = 'Saved';
+					tmpSelfX.pict.AppData.ContentEditor.SaveStatusClass = 'content-editor-status-saved';
+					tmpSelfX.loadFileList();
+					setTimeout(() =>
+					{
+						if (tmpSelfX.pict.AppData.ContentEditor.SaveStatus === 'Saved')
+						{
+							tmpSelfX.pict.AppData.ContentEditor.SaveStatus = '';
+							tmpSelfX.pict.AppData.ContentEditor.SaveStatusClass = '';
+							tmpSelfX.renderTopBar();
+						}
+					}, 3000);
+				}
+				tmpSelfX.renderTopBar();
+			});
+			return;
+		}
 
 		if (tmpActiveEditor === 'code')
 		{
@@ -1272,9 +1363,29 @@ class ContentEditorApplication extends libPictApplication
 
 		// Generate sensible default content based on file type
 		let tmpDefaultContent = '';
-		if (pFilePath.endsWith('.md'))
+		let tmpLower = pFilePath.toLowerCase();
+		if (tmpLower.endsWith('.md'))
 		{
 			tmpDefaultContent = '# ' + pFilePath.replace(/\.[^.]+$/, '').replace(/^.*\//, '') + '\n\n';
+		}
+		else if (tmpLower.endsWith('.excalidraw.json') ||
+				 tmpLower.endsWith('.excalidraw'))
+		{
+			// Empty-but-valid Excalidraw scene.  Opens with a blank canvas;
+			// saving once produces the matching `.excalidraw.svg` sibling
+			// (2-file mode).  The .excalidraw.svg path isn't supported as a
+			// direct creation target because rendering an empty Excalidraw
+			// SVG requires the wrapper bundle — users create the .json
+			// (or the bare `.excalidraw`), open it, and save once to produce
+			// the SVG sibling.
+			tmpDefaultContent = JSON.stringify({
+				type: 'excalidraw',
+				version: 2,
+				source: 'retold-content-system',
+				elements: [],
+				appState: {},
+				files: {}
+			}, null, 2);
 		}
 		else
 		{

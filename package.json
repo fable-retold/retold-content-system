@@ -25,7 +25,8 @@
 		"build-codejar": "node build/build-codejar-bundle.js",
 		"build-all": "npm run build-codemirror && npm run build-codejar && npm run build",
 		"prepack": "npm run build-all",
-		"test": "echo \"Error: no test specified\" && exit 0",
+		"test": "mocha -u tdd -R spec",
+		"tests": "mocha -u tdd -R spec -g",
 		"prepublishOnly": "npm test",
 		"postversion": "npx quack release postversion",
 		"postpublish": "npx quack release postpublish",
@@ -99,24 +100,27 @@
 		"fable": "^3.1.75",
 		"orator": "^6.1.2",
 		"orator-serviceserver-restify": "^2.0.11",
-		"pict": "^1.0.370",
+		"pict": "^1.0.372",
 		"pict-application": "^1.0.34",
 		"pict-provider": "^1.0.13",
 		"pict-provider-theme": "^1.0.1",
 		"pict-provider-vocabulary": "^1.0.1",
 		"pict-section-code": "^1.0.11",
-		"pict-section-content": "^1.0.3",
+		"pict-section-content": "^1.0.5",
+		"pict-section-excalidraw": "^1.0.0",
 		"pict-section-filebrowser": "^1.0.4",
 		"pict-section-inlinedocumentation": "^1.0.1",
 		"pict-section-login": "^1.0.0",
 		"pict-section-markdowneditor": "^1.0.15",
-		"pict-section-modal": "^1.1.1",
-		"pict-section-theme": "^1.0.5",
+		"pict-section-modal": "^1.1.4",
+		"pict-section-theme": "^1.0.6",
 		"pict-service-commandlineutility": "^1.0.19",
 		"pict-view": "^1.0.68",
 		"ultravisor-beacon": "^1.0.1"
 	},
 	"devDependencies": {
+		"chai": "^4.5.0",
+		"mocha": "^10.4.0",
 		"@codemirror/lang-markdown": "^6.5.0",
 		"@codemirror/state": "^6.6.0",
 		"@codemirror/view": "^6.41.0",
@@ -124,8 +128,8 @@
 		"codemirror": "^6.0.2",
 		"esbuild": "^0.28.0",
 		"highlight.js": "^11.11.1",
-		"pict-docuserve": "^1.3.2",
-		"quackage": "^1.2.3",
+		"pict-docuserve": "^1.4.1",
+		"quackage": "^1.2.4",
 		"retold-sharp": "^1.0.0"
 	},
 	"copyFilesSettings": {
@@ -147,6 +151,22 @@
 		{
 			"from": "./node_modules/pict/dist/pict.min.js.map",
 			"to": "./web-application/js/"
+		},
+		{
+			"from": "./node_modules/pict-section-excalidraw/vendor/excalidraw-built/react-vendor.min.js",
+			"to": "./web-application/js/"
+		},
+		{
+			"from": "./node_modules/pict-section-excalidraw/vendor/excalidraw-built/excalidraw-wrapper.min.js",
+			"to": "./web-application/js/"
+		},
+		{
+			"from": "./node_modules/pict-section-excalidraw/vendor/excalidraw-built/excalidraw-wrapper.css",
+			"to": "./web-application/css/"
+		},
+		{
+			"from": "./node_modules/pict-section-excalidraw/vendor/excalidraw-built/assets/**/*",
+			"to": "./web-application/js/excalidraw-assets/"
 		}
 	],
 	"retold": {
