@@ -15,4 +15,4 @@ Point it at any folder of markdown files. Get a live documentation site, an in-b
 [Quick Start](quickstart.md)
 [Persistence Hooks](persistence-hooks.md)
 [Architecture](architecture.md)
-[GitHub](https://github.com/stevenvelozo/retold-content-system)
+[GitHub](https://github.com/fable-retold/retold-content-system)

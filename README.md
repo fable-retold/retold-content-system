@@ -1,6 +1,6 @@
 # Retold Content System
 
-> **[&#9654; Read the Retold-Content-System Documentation](https://stevenvelozo.github.io/retold-content-system/)** &mdash; interactive docs with the full API reference.
+> **[&#9654; Read the Retold-Content-System Documentation](https://fable-retold.github.io/retold-content-system/)** &mdash; interactive docs with the full API reference.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -154,13 +154,13 @@ Produces a browser bundle at `web-application/retold-content-system.min.js` plus
 
 ## Related Packages
 
-- [pict](https://github.com/stevenvelozo/pict) -- MVC framework
-- [pict-application](https://github.com/stevenvelozo/pict-application) -- application host and lifecycle
-- [pict-docuserve](https://github.com/stevenvelozo/pict-docuserve) -- documentation reader used for the `/` route
-- [pict-section-markdowneditor](https://github.com/stevenvelozo/pict-section-markdowneditor) -- CodeMirror-based markdown editor
-- [pict-section-code](https://github.com/stevenvelozo/pict-section-code) -- CodeJar-based code editor
-- [pict-section-filebrowser](https://github.com/stevenvelozo/pict-section-filebrowser) -- file browser sidebar
-- [orator](https://github.com/stevenvelozo/orator) -- REST server framework
+- [pict](https://github.com/fable-retold/pict) -- MVC framework
+- [pict-application](https://github.com/fable-retold/pict-application) -- application host and lifecycle
+- [pict-docuserve](https://github.com/fable-retold/pict-docuserve) -- documentation reader used for the `/` route
+- [pict-section-markdowneditor](https://github.com/fable-retold/pict-section-markdowneditor) -- CodeMirror-based markdown editor
+- [pict-section-code](https://github.com/fable-retold/pict-section-code) -- CodeJar-based code editor
+- [pict-section-filebrowser](https://github.com/fable-retold/pict-section-filebrowser) -- file browser sidebar
+- [orator](https://github.com/fable-retold/orator) -- REST server framework
 
 ## License
 

@@ -29,7 +29,7 @@ dependencies, env-var contract, or the Dockerfile changed.
 
 - **npm login** — `npm whoami` should print your username.
 - **Git remote configured** — `git remote get-url origin` should print
-  `git@github.com:stevenvelozo/retold-content-system.git` (or the
+  `git@github.com:fable-retold/retold-content-system.git` (or the
   HTTPS equivalent).
 - **Push access to the repo** — required so `postversion` /
   `postpublish` hooks can push commits and tags.
@@ -118,7 +118,7 @@ BUILD_DOCKER=1 npm publish    (or: npm run publish:docker)
 ## Verifying a release
 
 1. **npm**: `npm view retold-content-system version`
-2. **Workflow**: `https://github.com/stevenvelozo/retold-content-system/actions`
+2. **Workflow**: `https://github.com/fable-retold/retold-content-system/actions`
 3. **Image**: `docker pull ghcr.io/stevenvelozo/retold-content-system:latest`
 
 If the first `docker pull` returns `denied`, the package is private by

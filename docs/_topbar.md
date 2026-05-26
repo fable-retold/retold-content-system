@@ -7,4 +7,4 @@
 - [Architecture](architecture.md)
 - [API Reference](api-reference.md)
 - [Code Snippets](code-snippets.md)
-- [GitHub](https://github.com/stevenvelozo/retold-content-system)
+- [GitHub](https://github.com/fable-retold/retold-content-system)
