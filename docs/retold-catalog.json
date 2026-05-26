@@ -1,0 +1,117 @@
+{
+	"Generated": "2026-05-26T18:25:59.481Z",
+	"Mode": "module",
+	"GitHubOrg": "fable-retold",
+	"DefaultBranch": "master",
+	"Module": {
+		"Name": "retold-content-system",
+		"Repo": "retold-content-system",
+		"Group": "",
+		"Branch": "master",
+		"HasDocs": true,
+		"HasCover": true,
+		"Sidebar": [
+			{
+				"Title": "Getting Started",
+				"Children": [
+					{
+						"Title": "Overview",
+						"Path": "README.md"
+					},
+					{
+						"Title": "Quick Start",
+						"Path": "quickstart.md"
+					},
+					{
+						"Title": "CLI Reference",
+						"Path": "cli-reference.md"
+					}
+				]
+			},
+			{
+				"Title": "Guides",
+				"Children": [
+					{
+						"Title": "Persistence Hooks",
+						"Path": "persistence-hooks.md"
+					},
+					{
+						"Title": "Code Snippets",
+						"Path": "code-snippets.md"
+					}
+				]
+			},
+			{
+				"Title": "Reference",
+				"Children": [
+					{
+						"Title": "Architecture",
+						"Path": "architecture.md"
+					},
+					{
+						"Title": "Configuration",
+						"Path": "configuration.md"
+					},
+					{
+						"Title": "API Reference",
+						"Path": "api-reference.md"
+					}
+				]
+			},
+			{
+				"Title": "Retold Ecosystem",
+				"Children": [
+					{
+						"Title": "Pict",
+						"Path": "https://fable-retold.github.io/pict/README.md"
+					},
+					{
+						"Title": "Pict Application",
+						"Path": "https://fable-retold.github.io/pict-application/README.md"
+					},
+					{
+						"Title": "Pict Docuserve",
+						"Path": "https://fable-retold.github.io/pict-docuserve/README.md"
+					},
+					{
+						"Title": "Pict Section Markdown Editor",
+						"Path": "https://fable-retold.github.io/pict-section-markdowneditor/README.md"
+					},
+					{
+						"Title": "Pict Section Code",
+						"Path": "https://fable-retold.github.io/pict-section-code/README.md"
+					},
+					{
+						"Title": "Pict Section File Browser",
+						"Path": "https://fable-retold.github.io/pict-section-filebrowser/README.md"
+					},
+					{
+						"Title": "Orator",
+						"Path": "https://fable-retold.github.io/orator/README.md"
+					},
+					{
+						"Title": "Fable",
+						"Path": "https://fable-retold.github.io/fable/README.md"
+					}
+				]
+			}
+		],
+		"DocFiles": [
+			"README.md",
+			"_brand.json",
+			"_cover.md",
+			"_sidebar.md",
+			"_topbar.md",
+			"api-reference.md",
+			"architecture.md",
+			"cli-reference.md",
+			"code-snippets.md",
+			"configuration.md",
+			"index.html",
+			"persistence-hooks.md",
+			"quickstart.md",
+			"retold-keyword-index.json"
+		]
+	},
+	"Groups": []
+}
