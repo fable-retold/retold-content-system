@@ -2,7 +2,7 @@
 
 > **[Read the Retold-Content-System Documentation](https://fable-retold.github.io/retold-content-system/)** - interactive docs with the full API reference.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[MIT License](LICENSE)
 
 ---
 
