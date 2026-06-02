@@ -1,0 +1,18 @@
+sequenceDiagram
+	participant User
+	participant MDE as MarkdownEditor view
+	participant Provider as ContentEditorProvider
+	participant API as Content API
+	participant FS as Filesystem
+
+	User->>MDE: F3 or drag-and-drop an image
+	MDE->>Provider: uploadImage(file, cb)
+	Provider->>Provider: determine target folder<br/>(current file's directory or browser location)
+	Provider->>API: POST /api/content/upload-image<br/>Headers: x-filename, x-upload-path, Content-Type<br/>Body: raw bytes
+	API->>API: sanitizeFilename, sanitizePath
+	API->>API: dedupe with timestamp
+	API->>FS: writeFile
+	FS-->>API: ok
+	API-->>Provider: { Success, URL, RelativePath, Filename, Size }
+	Provider-->>MDE: url
+	MDE->>MDE: insert image markdown at cursor

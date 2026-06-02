@@ -1,0 +1,23 @@
+graph LR
+	subgraph "Client"
+		EDITOR["Editor views"]
+		PROVIDER["ContentEditorProvider<br/>loadFile / saveFile / uploadImage"]
+	end
+	subgraph "Server"
+		API["REST API<br/>/api/content/read<br/>/api/content/save<br/>/api/content/upload-image"]
+	end
+	subgraph "Backend"
+		FS["Filesystem (default)"]
+		DB[("Database")]
+		S3[("Object store")]
+		HTTP["HTTP API"]
+	end
+
+	EDITOR --> PROVIDER
+	PROVIDER -->|default| API
+	API -->|default| FS
+	PROVIDER -.->|override A| DB
+	PROVIDER -.->|override A| S3
+	API -.->|override B| DB
+	API -.->|override B| S3
+	API -.->|override B| HTTP

@@ -1,0 +1,19 @@
+sequenceDiagram
+	participant User
+	participant CLI as rcs serve
+	participant Setup as ContentSystem-Server-Setup
+	participant Orator
+	participant FB as FileBrowserService
+	participant FS as Filesystem
+
+	User->>CLI: rcs serve ./my-docs -p 8080
+	CLI->>CLI: resolve content path
+	CLI->>Setup: setupContentSystemServer(options)
+	Setup->>Orator: create service server
+	Setup->>Orator: register static routes (/, /edit.html, /content/*)
+	Setup->>Orator: register REST API (/api/content/*, /api/content/upload-image, /api/content/mkdir)
+	Setup->>FB: new FileBrowserService(basePath)
+	FB->>Orator: connectRoutes() (/api/filebrowser/*)
+	Setup->>Orator: startService()
+	Orator-->>CLI: listening on port
+	CLI->>User: print banner with URL

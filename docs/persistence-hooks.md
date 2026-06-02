@@ -12,31 +12,8 @@ There are exactly three operations to replace:
 
 Each one lives at two places: a method on `ContentEditorProvider` (the client-side provider the editor views call) and a REST endpoint on the Orator server that the default provider hits. You can override at either layer -- or both -- depending on how much of the system you own.
 
-```mermaid
-graph LR
-	subgraph "Client"
-		EDITOR["Editor views"]
-		PROVIDER["ContentEditorProvider<br/>loadFile / saveFile / uploadImage"]
-	end
-	subgraph "Server"
-		API["REST API<br/>/api/content/read<br/>/api/content/save<br/>/api/content/upload-image"]
-	end
-	subgraph "Backend"
-		FS["Filesystem (default)"]
-		DB[("Database")]
-		S3[("Object store")]
-		HTTP["HTTP API"]
-	end
-
-	EDITOR --> PROVIDER
-	PROVIDER -->|default| API
-	API -->|default| FS
-	PROVIDER -.->|override A| DB
-	PROVIDER -.->|override A| S3
-	API -.->|override B| DB
-	API -.->|override B| S3
-	API -.->|override B| HTTP
-```
+<!-- bespoke diagram: edit diagrams/the-three-boundaries.mmd or .hints.json, then: npx pict-renderer-graph build modules/apps/retold-content-system/docs -->
+![The Three Boundaries](diagrams/the-three-boundaries.svg)
 
 There are two replacement strategies:
 

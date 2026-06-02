@@ -4,51 +4,8 @@ The Retold Content System is a Node CLI that starts a small Orator HTTP server s
 
 ## Process Layout
 
-```mermaid
-graph TB
-	subgraph "Node Process (rcs serve)"
-		CLI["ContentSystem-CLI<br/>serve command"]
-		SETUP["ContentSystem-Server-Setup"]
-
-		subgraph "Orator HTTP Server"
-			STATIC["Static routes<br/>/ , /edit.html , /content/*"]
-			API["REST API<br/>/api/content/* , /api/filebrowser/*"]
-			FB["FileBrowserService<br/>(pict-section-filebrowser)"]
-		end
-
-		BEACON["Ultravisor Beacon<br/>(optional)"]
-	end
-
-	subgraph "Browser -- Reader (/)"
-		READER["ContentReaderApplication<br/>(extends pict-docuserve)"]
-	end
-
-	subgraph "Browser -- Editor (/edit.html)"
-		EDITOR["ContentEditorApplication<br/>(extends pict-application)"]
-		PROVIDER["ContentEditorProvider<br/>(client persistence hooks)"]
-		LAYOUT["Editor views<br/>Layout / TopBar / MarkdownEditor / CodeEditor / Preview / FileBrowser / Topics / Settings"]
-	end
-
-	subgraph "Default Backend"
-		FS["Filesystem<br/>(content folder)"]
-	end
-
-	CLI --> SETUP
-	SETUP --> STATIC
-	SETUP --> API
-	SETUP --> FB
-	SETUP -.->|optional| BEACON
-
-	READER -->|fetch markdown| STATIC
-	EDITOR --> PROVIDER
-	EDITOR --> LAYOUT
-	PROVIDER -->|HTTP| API
-
-	API -->|read / write| FS
-	FB -->|list / info| FS
-	STATIC -->|serve files| FS
-	BEACON -->|read / save / list / mkdir| FS
-```
+<!-- bespoke diagram: edit diagrams/process-layout.mmd or .hints.json, then: npx pict-renderer-graph build modules/apps/retold-content-system/docs -->
+![Process Layout](diagrams/process-layout.svg)
 
 Any of the dashed or solid arrows in the "Default Backend" column can be redirected at a different store. The [Persistence Hooks](persistence-hooks.md) guide walks through each option.
 
@@ -112,104 +69,23 @@ classDiagram
 
 ## Server Startup
 
-```mermaid
-sequenceDiagram
-	participant User
-	participant CLI as rcs serve
-	participant Setup as ContentSystem-Server-Setup
-	participant Orator
-	participant FB as FileBrowserService
-	participant FS as Filesystem
-
-	User->>CLI: rcs serve ./my-docs -p 8080
-	CLI->>CLI: resolve content path
-	CLI->>Setup: setupContentSystemServer(options)
-	Setup->>Orator: create service server
-	Setup->>Orator: register static routes (/, /edit.html, /content/*)
-	Setup->>Orator: register REST API (/api/content/*, /api/content/upload-image, /api/content/mkdir)
-	Setup->>FB: new FileBrowserService(basePath)
-	FB->>Orator: connectRoutes() (/api/filebrowser/*)
-	Setup->>Orator: startService()
-	Orator-->>CLI: listening on port
-	CLI->>User: print banner with URL
-```
+<!-- bespoke diagram: edit diagrams/server-startup.mmd or .hints.json, then: npx pict-renderer-graph build modules/apps/retold-content-system/docs -->
+![Server Startup](diagrams/server-startup.svg)
 
 ## Editor Load Flow
 
-```mermaid
-sequenceDiagram
-	participant Browser
-	participant Editor as ContentEditorApplication
-	participant Provider as ContentEditorProvider
-	participant FB as FileBrowserService
-	participant API as Content API
-	participant FS as Filesystem
-
-	Browser->>Editor: GET /edit.html
-	Editor->>Editor: onAfterInitializeAsync()
-	Editor->>Editor: register views + provider
-	Editor->>FB: GET /api/filebrowser/list?path=/
-	FB->>FS: readdir
-	FS-->>FB: dir entries
-	FB-->>Editor: file list
-	Editor->>Editor: render Layout, TopBar, FileBrowser
-	Editor->>Editor: resolveHash() -- if URL has #/edit/path
-	alt hash has a file
-		Editor->>Editor: navigateToFile(path)
-		Editor->>Provider: loadFile(path, cb)
-		Provider->>API: GET /api/content/read/path
-		API->>FS: readFile
-		FS-->>API: content
-		API-->>Provider: { Success, Content }
-		Provider-->>Editor: content
-		Editor->>Editor: render MarkdownEditor or CodeEditor with content
-	end
-```
+<!-- bespoke diagram: edit diagrams/editor-load-flow.mmd or .hints.json, then: npx pict-renderer-graph build modules/apps/retold-content-system/docs -->
+![Editor Load Flow](diagrams/editor-load-flow.svg)
 
 ## Save Flow
 
-```mermaid
-sequenceDiagram
-	participant User
-	participant Editor as ContentEditorApplication
-	participant Provider as ContentEditorProvider
-	participant API as Content API
-	participant FS as Filesystem
-
-	User->>Editor: Ctrl+S
-	Editor->>Editor: saveCurrentFile()
-	Editor->>Provider: saveFile(path, content, cb)
-	Provider->>API: PUT /api/content/save/path { Content }
-	API->>API: sanitizePath, bounds check
-	API->>FS: writeFile
-	FS-->>API: ok
-	API-->>Provider: { Success, Path, Size }
-	Provider-->>Editor: null (no error)
-	Editor->>Editor: markClean(), update save status
-```
+<!-- bespoke diagram: edit diagrams/save-flow.mmd or .hints.json, then: npx pict-renderer-graph build modules/apps/retold-content-system/docs -->
+![Save Flow](diagrams/save-flow.svg)
 
 ## Image Upload Flow
 
-```mermaid
-sequenceDiagram
-	participant User
-	participant MDE as MarkdownEditor view
-	participant Provider as ContentEditorProvider
-	participant API as Content API
-	participant FS as Filesystem
-
-	User->>MDE: F3 or drag-and-drop an image
-	MDE->>Provider: uploadImage(file, cb)
-	Provider->>Provider: determine target folder<br/>(current file's directory or browser location)
-	Provider->>API: POST /api/content/upload-image<br/>Headers: x-filename, x-upload-path, Content-Type<br/>Body: raw bytes
-	API->>API: sanitizeFilename, sanitizePath
-	API->>API: dedupe with timestamp
-	API->>FS: writeFile
-	FS-->>API: ok
-	API-->>Provider: { Success, URL, RelativePath, Filename, Size }
-	Provider-->>MDE: url
-	MDE->>MDE: insert image markdown at cursor
-```
+<!-- bespoke diagram: edit diagrams/image-upload-flow.mmd or .hints.json, then: npx pict-renderer-graph build modules/apps/retold-content-system/docs -->
+![Image Upload Flow](diagrams/image-upload-flow.svg)
 
 ## REST Endpoints
 

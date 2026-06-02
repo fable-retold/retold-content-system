@@ -1,0 +1,27 @@
+sequenceDiagram
+	participant Browser
+	participant Editor as ContentEditorApplication
+	participant Provider as ContentEditorProvider
+	participant FB as FileBrowserService
+	participant API as Content API
+	participant FS as Filesystem
+
+	Browser->>Editor: GET /edit.html
+	Editor->>Editor: onAfterInitializeAsync()
+	Editor->>Editor: register views + provider
+	Editor->>FB: GET /api/filebrowser/list?path=/
+	FB->>FS: readdir
+	FS-->>FB: dir entries
+	FB-->>Editor: file list
+	Editor->>Editor: render Layout, TopBar, FileBrowser
+	Editor->>Editor: resolveHash() -- if URL has #/edit/path
+	alt hash has a file
+		Editor->>Editor: navigateToFile(path)
+		Editor->>Provider: loadFile(path, cb)
+		Provider->>API: GET /api/content/read/path
+		API->>FS: readFile
+		FS-->>API: content
+		API-->>Provider: { Success, Content }
+		Provider-->>Editor: content
+		Editor->>Editor: render MarkdownEditor or CodeEditor with content
+	end

@@ -1,0 +1,43 @@
+graph TB
+	subgraph "Node Process (rcs serve)"
+		CLI["ContentSystem-CLI<br/>serve command"]
+		SETUP["ContentSystem-Server-Setup"]
+
+		subgraph "Orator HTTP Server"
+			STATIC["Static routes<br/>/ , /edit.html , /content/*"]
+			API["REST API<br/>/api/content/* , /api/filebrowser/*"]
+			FB["FileBrowserService<br/>(pict-section-filebrowser)"]
+		end
+
+		BEACON["Ultravisor Beacon<br/>(optional)"]
+	end
+
+	subgraph "Browser -- Reader (/)"
+		READER["ContentReaderApplication<br/>(extends pict-docuserve)"]
+	end
+
+	subgraph "Browser -- Editor (/edit.html)"
+		EDITOR["ContentEditorApplication<br/>(extends pict-application)"]
+		PROVIDER["ContentEditorProvider<br/>(client persistence hooks)"]
+		LAYOUT["Editor views<br/>Layout / TopBar / MarkdownEditor / CodeEditor / Preview / FileBrowser / Topics / Settings"]
+	end
+
+	subgraph "Default Backend"
+		FS["Filesystem<br/>(content folder)"]
+	end
+
+	CLI --> SETUP
+	SETUP --> STATIC
+	SETUP --> API
+	SETUP --> FB
+	SETUP -.->|optional| BEACON
+
+	READER -->|fetch markdown| STATIC
+	EDITOR --> PROVIDER
+	EDITOR --> LAYOUT
+	PROVIDER -->|HTTP| API
+
+	API -->|read / write| FS
+	FB -->|list / info| FS
+	STATIC -->|serve files| FS
+	BEACON -->|read / save / list / mkdir| FS

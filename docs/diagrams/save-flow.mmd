@@ -1,0 +1,17 @@
+sequenceDiagram
+	participant User
+	participant Editor as ContentEditorApplication
+	participant Provider as ContentEditorProvider
+	participant API as Content API
+	participant FS as Filesystem
+
+	User->>Editor: Ctrl+S
+	Editor->>Editor: saveCurrentFile()
+	Editor->>Provider: saveFile(path, content, cb)
+	Provider->>API: PUT /api/content/save/path { Content }
+	API->>API: sanitizePath, bounds check
+	API->>FS: writeFile
+	FS-->>API: ok
+	API-->>Provider: { Success, Path, Size }
+	Provider-->>Editor: null (no error)
+	Editor->>Editor: markClean(), update save status
