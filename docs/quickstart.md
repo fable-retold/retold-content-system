@@ -30,19 +30,8 @@ The CLI exposes two equivalent entry points: `retold-content-system` and the sho
 
 A content folder is just any directory with markdown files. A typical layout:
 
-```
-my-docs/
-├── README.md
-├── cover.md
-├── _sidebar.md
-├── _topbar.md
-├── guides/
-│   ├── getting-started.md
-│   └── images/
-│       └── screenshot.png
-└── api/
-    └── reference.md
-```
+<!-- bespoke diagram: edit diagrams/2-prepare-a-content-folder.mmd or .hints.json, then: npx pict-renderer-graph build modules/apps/retold-content-system/docs -->
+![2. Prepare a Content Folder](diagrams/2-prepare-a-content-folder.svg)
 
 Only `README.md` is needed to get started -- everything else is optional. The `cover.md`, `_sidebar.md`, and `_topbar.md` files are interpreted by the reader (via `pict-docuserve`) to build the splash, navigation, and top bar.
 

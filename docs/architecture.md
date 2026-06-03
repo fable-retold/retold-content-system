@@ -121,48 +121,8 @@ Each of these routes is a plain Orator route defined in `ContentSystem-Server-Se
 
 ## File Layout
 
-```
-retold-content-system/
-├── README.md
-├── package.json
-├── source/
-│   ├── Pict-ContentSystem-Bundle.js               # browser bundle entry
-│   ├── Pict-Application-ContentReader.js          # reader application
-│   ├── Pict-Application-ContentReader-Configuration.json
-│   ├── Pict-Application-ContentEditor.js          # editor application
-│   ├── Pict-Application-ContentEditor-Configuration.json
-│   ├── cli/
-│   │   ├── ContentSystem-CLI-Run.js               # bin entry
-│   │   ├── ContentSystem-CLI-Program.js           # command definitions
-│   │   ├── ContentSystem-Server-Setup.js          # Orator wiring
-│   │   └── commands/
-│   │       └── ContentSystem-Command-Serve.js     # serve command
-│   ├── providers/
-│   │   └── Pict-Provider-ContentEditor.js         # client persistence hooks
-│   └── views/
-│       ├── PictView-Editor-Layout.js
-│       ├── PictView-Editor-TopBar.js
-│       ├── PictView-Editor-MarkdownEditor.js
-│       ├── PictView-Editor-CodeEditor.js
-│       ├── PictView-Editor-MarkdownReference.js
-│       ├── PictView-Editor-SettingsPanel.js
-│       └── PictView-Editor-Topics.js
-├── html/
-│   ├── index.html                                 # reader entry
-│   ├── edit.html                                  # editor entry
-│   └── preview.html
-├── web-application/                               # built bundles + CSS
-├── content/                                       # example content folder
-└── docs/
-	├── README.md, _cover.md, _sidebar.md, _topbar.md
-	├── quickstart.md
-	├── architecture.md
-	├── configuration.md
-	├── api-reference.md
-	├── code-snippets.md
-	├── persistence-hooks.md
-	└── cli-reference.md
-```
+<!-- bespoke diagram: edit diagrams/file-layout.mmd or .hints.json, then: npx pict-renderer-graph build modules/apps/retold-content-system/docs -->
+![File Layout](diagrams/file-layout.svg)
 
 ## Client State
 

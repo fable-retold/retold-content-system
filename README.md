@@ -107,20 +107,8 @@ See [docs/persistence-hooks.md](docs/persistence-hooks.md) for every extension p
 
 ## Content Folder Conventions
 
-```
-my-docs/
-├── README.md                             # reader home page
-├── cover.md                              # reader splash (optional)
-├── _sidebar.md                           # reader navigation (optional)
-├── _topbar.md                            # reader top bar (optional)
-├── .pict_documentation_topics.json       # topic manifest (optional)
-├── guides/
-│   ├── getting-started.md
-│   └── images/
-│       └── screenshot.png
-└── api/
-    └── reference.md
-```
+<!-- bespoke diagram: edit diagrams/content-folder-conventions.mmd or .hints.json, then: npx pict-renderer-graph build modules/apps/retold-content-system -->
+![Content Folder Conventions](diagrams/content-folder-conventions.svg)
 
 ## Documentation
 
