@@ -387,7 +387,7 @@ class ContentEditorApplication extends libPictApplication
 					DocsBaseURL: '/content/',
 					ContainerAddress: '#ContentEditor-Documentation-Panel',
 					SearchIndexURL: '/content/retold-keyword-index.json',
-					ExternalDocBaseURL: 'https://stevenvelozo.github.io/retold/#/doc/',
+					ExternalDocBaseURL: 'https://fable-retold.io/#/doc/',
 					EditEnabled: false,
 					TopicManagerEnabled: false
 				},
